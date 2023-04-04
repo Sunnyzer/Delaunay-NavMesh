@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public abstract class Geometry
@@ -124,7 +122,7 @@ public class DelaunayGroup : Geometry
     }
 }
 
-public class Delaunay 
+public class Delaunay
 {
     [SerializeField] List<Triangle> triangles = new List<Triangle>();
     [NonSerialized] public List<Vector3> Vertices = new List<Vector3>();
