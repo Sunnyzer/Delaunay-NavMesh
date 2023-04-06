@@ -5,7 +5,7 @@ using UnityEngine.AI;
 
 public class DrawDelaunay : MonoBehaviour
 {
-    Delaunay delaunay = new Delaunay();
+    [SerializeField] Delaunay delaunay = new Delaunay();
     [SerializeField] List<Vector3> vertices = new List<Vector3>();
     [SerializeField] Vector3 extends = Vector3.one;
     [SerializeField] bool navMeshVolumeDebug = true;

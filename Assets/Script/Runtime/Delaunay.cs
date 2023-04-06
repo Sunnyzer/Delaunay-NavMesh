@@ -23,7 +23,7 @@ public class Triangle : Geometry
     public override bool ContainsPoint(Vector3 _point)
     {
         Vector2 _point2D = Delaunay.GetVector2(_point);
-        return Vector2.Distance(_point2D, Delaunay.GetVector2(A)) < 0.00001f || Vector2.Distance(_point2D, Delaunay.GetVector2(B)) < 0.00001f || Vector2.Distance(_point2D, Delaunay.GetVector2(C)) < 0.00001f;
+        return Vector2.Distance(_point2D, Delaunay.GetVector2(A)) < 0.01f || Vector2.Distance(_point2D, Delaunay.GetVector2(B)) < 0.00001f || Vector2.Distance(_point2D, Delaunay.GetVector2(C)) < 0.00001f;
     }
     public Vector3 GetCenterTriangle()
     {
@@ -42,14 +42,17 @@ public class Triangle : Geometry
     {
         Vector2 _center2D = Delaunay.GetVector2(GetCenterTriangle());
         Vector2 _point2D = Delaunay.GetVector2(_point);
-
-        if(Vector2.Distance(_center2D, _point2D) > Vector2.Distance(_center2D, Delaunay.GetVector2(A)))
-            return false;
-        return true;
+        float _distanceP = Vector2.Distance(_center2D, _point2D);
+        float _radius = Vector2.Distance(_center2D, Delaunay.GetVector2(A));
+        if(_distanceP <= _radius - 0.001f)
+            return true;
+        //if(Mathf.Abs(_radius - _distanceP) < 0.01f)
+        //Debug.Log(_radius + " " + _distanceP);
+        return false;
     }
     public override Vector3 GetLowestPoint()
     {
-        if (A.z < B.z && A.z < C.z)
+        if (A.z - B.z <= 0.001f && A.z <= 0.001f)
             return A;
         if (B.z < A.z && B.z < C.z)
             return B;
@@ -154,16 +157,20 @@ public class DelaunayGroup : Geometry
     }
 }
 
+[Serializable]
 public class Delaunay
 {
     [SerializeField] List<Triangle> triangles = new List<Triangle>();
     [NonSerialized] public List<Vector3> Vertices = new List<Vector3>();
+    [SerializeField] bool _debug = false;
+    int count = 0;
     public static Vector2 GetVector2(Vector3 _point)
     {
         return new Vector2(_point.x, _point.z);
     }
     public Geometry ComputeDelaunay(List<Vector3> _vertices)
     {
+        count = _vertices.Count;
         _vertices = _vertices.OrderBy((point) => 
         {
             return point.x + point.z * 0.0001f;
@@ -226,62 +233,67 @@ public class Delaunay
         Vector3 _rightMin = _rightGeo.GetLowestPoint();
 
         Edge _edgeLr = new Edge(_leftMin, _rightMin);
-        Debug.DrawLine(_leftMin, _rightMin + Vector3.up, Color.red ,10);
+        if(_vertices.Count != count && _debug)
+            Debug.DrawLine(_leftMin, _rightMin + Vector3.up, Color.red ,10);
         
-        bool _stopLink = false;
         int max = 0;
+        int h = 1;
         Vector3? _toIgnore = null;
-        
-        while (!_stopLink && max < 100)
+        bool _0t = true;
+        List<Triangle> _miss = new List<Triangle>();
+        while(max < 20 && !(_edgeLr.ContainsPoint(_leftGeo.GetHighestPoint()) && _edgeLr.ContainsPoint(_rightGeo.GetHighestPoint())))
         {
-            int _count = _vertices.Count;
-            for (int i = 0; i < _count; i++)
+            List<Vector3> _verticesUp = _vertices.FindAll(v => v.z >= _edgeLr.A.z || v.z >= _edgeLr.B.z);
+            for (int i = 0; i < _verticesUp.Count; i++)
             {
-                if (_edgeLr.ContainsPoint(_vertices[i])) continue;
-                if (_toIgnore != null && Vector2.Distance(GetVector2(_toIgnore.Value), GetVector2(_vertices[i])) < 0.00001f) continue;
-                float _dot = Vector2.Dot(GetVector2((_edgeLr.B - _edgeLr.A)).normalized, GetVector2((_edgeLr.B - _vertices[i])).normalized);
-                
-                if (_dot >= 0.9999f) continue;
-                if (_dot <= -0.9999f) continue;
-
-                Triangle _newTriangle = new Triangle(_edgeLr.A, _edgeLr.B, _vertices[i]);
-                bool _isNewTriangleValid = true;
-                for (int j = 0; j < _count; j++)
+                _0t = true;
+                Vector3 _vertice = _verticesUp[i];
+                if (_edgeLr.ContainsPoint(_vertice)) continue;
+                if (_toIgnore != null && Vector2.Distance(GetVector2(_toIgnore.Value), GetVector2(_vertice)) <= 0.001f) continue;
+                Triangle _t = new Triangle(_edgeLr.A, _edgeLr.B, _vertice);
+                bool _isValid = IsTriangleValid(_t, _vertices);
+                if (!_isValid)
                 {
-                    if (_newTriangle.ContainsPoint(_vertices[j])) continue;
-                    if (_newTriangle.IsInCircle(_vertices[j]))
-                    {
-                        _isNewTriangleValid = false;
-                        break;
-                    }
+                    _miss.Add(_t);
+                    continue;
                 }
-                if (!_isNewTriangleValid) continue;
-                
-                _triangles.Add(_newTriangle);
-                bool _containsLeft = _edgeLr.ContainsPoint(_leftGeo.GetHighestPoint());
-                bool _containsRight = _edgeLr.ContainsPoint(_rightGeo.GetHighestPoint());
-                Edge _previousEdge = new Edge(_edgeLr.A, _edgeLr.B);
-                if (_leftGeo.ContainsPoint(_vertices[i]))
+                _triangles.Add(_t);
+                if (_leftGeo.ContainsPoint(_vertice))
                 {
                     _toIgnore = _edgeLr.A;
-                    _edgeLr = new Edge(_vertices[i], _edgeLr.B);
+                    _edgeLr = new Edge(_vertice, _edgeLr.B);
                 }
                 else
                 {
                     _toIgnore = _edgeLr.B;
-                    _edgeLr = new Edge(_edgeLr.A, _vertices[i]);
+                    _edgeLr = new Edge(_edgeLr.A, _vertice);
                 }
-                if (_edgeLr.ContainsPoint(_previousEdge.A) && _edgeLr.ContainsPoint(_previousEdge.B))
-                    Debug.Log("marche pas");
-                if (_vertices.Count == 8)
-                    Debug.DrawLine(_edgeLr.A, _edgeLr.B + Vector3.up, Color.blue, 10);
-                if (_containsLeft && _containsRight)
-                {
-                    _stopLink = true;
-                    break;
-                }
+                if(_vertices.Count != count && _debug)
+                    Debug.DrawLine(_edgeLr.A + Vector3.up * h, _edgeLr.B + Vector3.up * h, Color.blue, 10);
+                _0t = false;
+                h++;
+                break;
             }
-            ++max;
+            if(_0t)
+            {
+                if(_debug)
+                {
+                    for (int i = 0; i < _miss.Count; i++)
+                    {
+                        Debug.DrawLine(_miss[i].A + Vector3.up * (i + 1), _miss[i].B + Vector3.up * (i + 1), Color.green, 10);
+                        Debug.DrawLine(_miss[i].B + Vector3.up * (i + 1), _miss[i].C + Vector3.up * (i + 1), Color.green, 10);
+                        Debug.DrawLine(_miss[i].C + Vector3.up * (i + 1), _miss[i].A + Vector3.up * (i + 1), Color.green, 10);
+                        Debug.DrawLine(_miss[i].GetCenterTriangle(), _miss[i].C + Vector3.up * (i + 1), Color.magenta, 10);
+                        Vector2 _center = GetVector2(_miss[i].GetCenterTriangle());
+                        float _distA = Vector2.Distance(_center, GetVector2(_miss[i].A));
+                        float _distB = Vector2.Distance(_center, GetVector2(_miss[i].B));
+                        if (_distA == _distB && _distA == Vector2.Distance(_center, _miss[i].C))
+                            Debug.Log("Test");
+                    }
+                }   
+                break;
+            }
+            max++;
         }
         for (int j = 0; j < _triangles.Count; j++)
         {
@@ -299,7 +311,19 @@ public class Delaunay
         }
         return new DelaunayGroup(_triangles, _vertices);
     }
-    
+    public bool IsTriangleValid(Triangle _t, List<Vector3> _vertices)
+    {
+        for (int i = 0; i < _vertices.Count; i++)
+        {
+            Vector3 _v = _vertices[i];
+            if (_t.ContainsPoint(_v)) continue;
+            if (_t.IsInCircle(_v))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
     public Triangle Link(Edge _startEdge, List<Vector3> _vertices, out Edge _edgeLR, Vector3? _toIgnore = null)
     {
         Triangle _newT = null;

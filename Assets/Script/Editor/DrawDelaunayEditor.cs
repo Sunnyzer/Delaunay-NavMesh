@@ -1,7 +1,5 @@
 using UnityEditor;
 using UnityEngine;
-using static UnityEditor.Experimental.GraphView.GraphView;
-using static UnityEngine.GraphicsBuffer;
 
 [CustomEditor(typeof(DrawDelaunay))]
 public class DrawDelaunayEditor : Editor
@@ -19,11 +17,14 @@ public class DrawDelaunayEditor : Editor
             GeneratePoint();
             eTarget.Compute();
         }
+            
         if (GUILayout.Button("GeneratePoint"))
             GeneratePoint();
     }
     private void OnSceneGUI()
     {
+        //GeneratePoint();
+        //eTarget.Compute();
         Handles.color = Color.white;
         for (int i = 0; i < eTarget.Vertices.Count && i < 10000; i++)
         {
@@ -37,7 +38,7 @@ public class DrawDelaunayEditor : Editor
         {
             Handles.DrawWireCube(_colliders[i].transform.position, _colliders[i].bounds.extents * 2);
         }
-        Handles.color = Color.white;
+        Handles.color = Color.black;
         if (eTarget.Triangles == null) return;
         for (int i = 0; i < eTarget.Triangles.Count && i < 10000; i++)
         {
@@ -57,25 +58,25 @@ public class DrawDelaunayEditor : Editor
         bool _hit = Physics.Raycast(eTarget.transform.position + _extends + Vector3.up * 10000, Vector3.down, out RaycastHit _rayHit, Mathf.Infinity, eTarget.Layer);
         if (_hit)
         {
-            Vector3 _position = _rayHit.point + new Vector3(1, 0, 1) * Random.Range(0.01f, 0.05f);
+            Vector3 _position = _rayHit.point /*+ new Vector3(1, 0, 1) * Random.Range(0.01f, 0.05f)*/;
                 eTarget.Vertices.Add(_position);
         }
         _hit = Physics.Raycast(eTarget.transform.position - _extends + Vector3.up * 10000, Vector3.down, out _rayHit, Mathf.Infinity, eTarget.Layer);
         if (_hit)
         {
-            Vector3 _position = _rayHit.point + new Vector3(1, 0, 1) * Random.Range(0.01f, 0.05f);
+            Vector3 _position = _rayHit.point /*+ new Vector3(1, 0, 1) * Random.Range(0.01f, 0.05f)*/;
             eTarget.Vertices.Add(_position);
         }
         _hit = Physics.Raycast(eTarget.transform.position - new Vector3(_extends.x, 0, -_extends.z) + Vector3.up * 10000, Vector3.down, out _rayHit, Mathf.Infinity, eTarget.Layer);
         if (_hit)
         {
-            Vector3 _position = _rayHit.point + new Vector3(1, 0, 1) * Random.Range(0.01f, 0.05f);
+            Vector3 _position = _rayHit.point /*+ new Vector3(1, 0, 1) * Random.Range(0.01f, 0.05f)*/;
             eTarget.Vertices.Add(_position);
         }
         _hit = Physics.Raycast(eTarget.transform.position - new Vector3(-_extends.x, 0, _extends.z) + Vector3.up * 10000, Vector3.down, out _rayHit, Mathf.Infinity, eTarget.Layer);
         if (_hit)
         {
-            Vector3 _position = _rayHit.point + new Vector3(1, 0, 1) * Random.Range(0.01f, 0.05f);
+            Vector3 _position = _rayHit.point /*+ new Vector3(1, 0, 1) * Random.Range(0.01f, 0.05f)*/;
             eTarget.Vertices.Add(_position);
         }
         Collider[] _colliders = Physics.OverlapBox(eTarget.transform.position, _extends);
