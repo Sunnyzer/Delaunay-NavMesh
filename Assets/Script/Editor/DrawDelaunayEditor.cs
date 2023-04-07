@@ -1,3 +1,5 @@
+using System;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 
@@ -55,30 +57,10 @@ public class DrawDelaunayEditor : Editor
     {
         eTarget.Vertices.Clear();
         Vector3 _extends = eTarget.Extends / 2; 
-        bool _hit = Physics.Raycast(eTarget.transform.position + _extends + Vector3.up * 10000, Vector3.down, out RaycastHit _rayHit, Mathf.Infinity, eTarget.Layer);
-        if (_hit)
-        {
-            Vector3 _position = _rayHit.point /*+ new Vector3(1, 0, 1) * Random.Range(0.01f, 0.05f)*/;
-                eTarget.Vertices.Add(_position);
-        }
-        _hit = Physics.Raycast(eTarget.transform.position - _extends + Vector3.up * 10000, Vector3.down, out _rayHit, Mathf.Infinity, eTarget.Layer);
-        if (_hit)
-        {
-            Vector3 _position = _rayHit.point /*+ new Vector3(1, 0, 1) * Random.Range(0.01f, 0.05f)*/;
-            eTarget.Vertices.Add(_position);
-        }
-        _hit = Physics.Raycast(eTarget.transform.position - new Vector3(_extends.x, 0, -_extends.z) + Vector3.up * 10000, Vector3.down, out _rayHit, Mathf.Infinity, eTarget.Layer);
-        if (_hit)
-        {
-            Vector3 _position = _rayHit.point /*+ new Vector3(1, 0, 1) * Random.Range(0.01f, 0.05f)*/;
-            eTarget.Vertices.Add(_position);
-        }
-        _hit = Physics.Raycast(eTarget.transform.position - new Vector3(-_extends.x, 0, _extends.z) + Vector3.up * 10000, Vector3.down, out _rayHit, Mathf.Infinity, eTarget.Layer);
-        if (_hit)
-        {
-            Vector3 _position = _rayHit.point /*+ new Vector3(1, 0, 1) * Random.Range(0.01f, 0.05f)*/;
-            eTarget.Vertices.Add(_position);
-        }
+        AddPoint(eTarget.transform.position + _extends);
+        AddPoint(eTarget.transform.position - _extends);
+        AddPoint(eTarget.transform.position - new Vector3(_extends.x, 0, -_extends.z));
+        AddPoint(eTarget.transform.position - new Vector3(-_extends.x, 0, _extends.z));
         Collider[] _colliders = Physics.OverlapBox(eTarget.transform.position, _extends);
         for (int i = 0; i < _colliders.Length; i++)
         {
@@ -112,14 +94,17 @@ public class DrawDelaunayEditor : Editor
             for (int j = 0; j < _allPoint.Length; ++j)
             {
                 Vector3 _point = _allPoint[j];
-                _hit = Physics.Raycast(_point + Vector3.up * 10000, Vector3.down, out _rayHit, Mathf.Infinity, _layer);
-                if (_hit)
-                {
-                    Vector3 _position = _rayHit.point/* + new Vector3(1, 0, 1)* Random.Range(0f, 0.0001f)*/;
-                    if(_position.y < 0.1f)
-                        eTarget.Vertices.Add(_position);
-                }
+                AddPoint(_point);
             }
+        }
+    }
+    public void AddPoint(Vector3 _point)
+    {
+        bool _hit = Physics.Raycast(_point + Vector3.up * 10000, Vector3.down, out RaycastHit _rayHit, Mathf.Infinity, eTarget.Layer);
+        if (_hit)
+        {
+            Vector3 _position = new Vector3((float)Math.Round(_rayHit.point.x, 2), (float)Math.Round(_rayHit.point.y, 2), (float)Math.Round(_rayHit.point.z, 2));
+            eTarget.Vertices.Add(_position);
         }
     }
 }
