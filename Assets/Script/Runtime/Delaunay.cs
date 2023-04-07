@@ -244,14 +244,14 @@ public class Delaunay
         while(max < 20 && !(_edgeLr.ContainsPoint(_leftGeo.GetHighestPoint()) && _edgeLr.ContainsPoint(_rightGeo.GetHighestPoint())))
         {
             List<Vector3> _verticesUp = _vertices.FindAll(v => v.z >= _edgeLr.A.z || v.z >= _edgeLr.B.z);
-            for (int i = 0; i < _verticesUp.Count; i++)
+            for (int i = 0; i < _vertices.Count; i++)
             {
                 _0t = true;
-                Vector3 _vertice = _verticesUp[i];
+                Vector3 _vertice = _vertices[i];
                 if (_edgeLr.ContainsPoint(_vertice)) continue;
                 if (_toIgnore != null && Vector2.Distance(GetVector2(_toIgnore.Value), GetVector2(_vertice)) <= 0.001f) continue;
                 Triangle _t = new Triangle(_edgeLr.A, _edgeLr.B, _vertice);
-                bool _isValid = IsTriangleValid(_t, _vertices);
+                bool _isValid = IsTriangleValid(_t, _vertices, _triangles);
                 if (!_isValid)
                 {
                     _miss.Add(_t);
@@ -311,45 +311,32 @@ public class Delaunay
         }
         return new DelaunayGroup(_triangles, _vertices);
     }
-    public bool IsTriangleValid(Triangle _t, List<Vector3> _vertices)
+    public bool IsTriangleValid(Triangle _t, List<Vector3> _vertices, List<Triangle> _triangles)
     {
         for (int i = 0; i < _vertices.Count; i++)
         {
             Vector3 _v = _vertices[i];
             if (_t.ContainsPoint(_v)) continue;
+            bool _sameCenter = false;
+            for (int j = 0; j < _triangles.Count; j++)
+            {
+                Vector2 _center = GetVector2(_t.GetCenterTriangle());
+                Vector2 _center2 = GetVector2(_triangles[j].GetCenterTriangle());
+                float _distance = Vector2.Distance(_center, _center2);
+                if (_distance <= 0.1f)
+                {
+                    _sameCenter = true;
+                    break;
+                }
+                if(_distance <= 0.25f)
+                    Debug.Log(_center + " " + _center2);
+            }
+            if (_sameCenter) continue;
             if (_t.IsInCircle(_v))
             {
                 return false;
             }
         }
         return true;
-    }
-    public Triangle Link(Edge _startEdge, List<Vector3> _vertices, out Edge _edgeLR, Vector3? _toIgnore = null)
-    {
-        Triangle _newT = null;
-        _edgeLR = null;
-        int _count = _vertices.Count;
-        for (int i = 0; i < _count; i++)
-        {
-            if (_startEdge.ContainsPoint(_vertices[i])) continue;
-            if (_toIgnore != null && Vector3.Distance(_toIgnore.Value, _vertices[i]) < 0.001f) continue;
-            _newT = new Triangle(_startEdge.A, _startEdge.B, _vertices[i]);
-            Vector3 _center = _newT.GetCenterTriangle();
-            Debug.DrawLine(_center, _center + Vector3.up * 0.1f, Color.magenta, 10);
-
-            bool _validT = false;//= //IsValidTriangle(_newT, _vertices);
-            if (!_validT) continue;
-            _edgeLR = null;
-            if (i >= _count / 2)
-            {
-                _edgeLR = new Edge(_newT.A, _newT.C);
-            }
-            else
-            {
-                _edgeLR = new Edge(_newT.B, _newT.C);
-            }
-            return _newT;
-        }
-        return null;
     }
 }
