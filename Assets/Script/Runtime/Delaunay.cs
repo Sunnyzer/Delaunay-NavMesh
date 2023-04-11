@@ -384,7 +384,13 @@ public class Delaunay
             for (int i = 0; i < _vertices.Count; i++)
             {
                 if (_t.ContainsPoint(_vertices[i])) continue;
-                if (_t.IsInCircle(_vertices[i]))
+                Vector2 _center2D = GetVector2(_t.GetCenterTriangle());
+                Vector2 _point2D = GetVector2(_vertices[i]);
+                float _distanceP = Vector2.Distance(_center2D, _point2D);
+                float _radius = Vector2.Distance(_center2D, Delaunay.GetVector2(_t.A));
+                if (Mathf.Abs(_distanceP - _radius) < 0.1f)
+                    Debug.Log(_distanceP + " " + _radius);
+                if (_distanceP < _radius - 0.001f)
                 {
                     _triangles.Remove(_t);
                     j--;
