@@ -47,7 +47,9 @@ public class Triangle : Geometry
         Vector2 _point2D = Delaunay.GetVector2(_point);
         float _distanceP = Vector2.Distance(_center2D, _point2D);
         float _radius = Vector2.Distance(_center2D, Delaunay.GetVector2(A));
-        if(_distanceP <= _radius)
+        if(Mathf.Abs(_distanceP - _radius) < 0.1f)
+            Debug.Log(_distanceP +" "+_radius);
+        if(_distanceP <= _radius - 0.001f)
             return true;
         return false;
     }
@@ -193,7 +195,7 @@ public class Delaunay
 {
     [SerializeField] List<Triangle> triangles = new List<Triangle>();
     [NonSerialized] public List<Vector3> Vertices = new List<Vector3>();
-    [SerializeField] bool _debug = false;
+    [SerializeField] bool debug = false;
     static int maxIte = 0;
     int count = 0;
     public static Vector2 GetVector2(Vector3 _point)
@@ -259,7 +261,7 @@ public class Delaunay
         Vector3 _rightMin = _rightGeo.GetLowestPoint();
 
         Edge _edgeLr = new Edge(_leftMin, _rightMin);
-        if(_vertices.Count == 8)
+        if(_vertices.Count == count)
         Debug.DrawLine(_leftMin + Vector3.up, _rightMin + Vector3.up, Color.red, 10);
 
         int max = 0;
@@ -292,16 +294,22 @@ public class Delaunay
                 float _angle = Vector2.SignedAngle(GetVector2(npcLeft[i] - _edgeLr.A).normalized, _edgeLr.GetNormal());
                 if (_angle <= 0)
                 {
-                    if (_vertices.Count == 8)
+                    if (_vertices.Count == count)
                     {
-                        Debug.DrawLine(npcLeft[i] + Vector3.up * 0.5f, _edgeLr.A + Vector3.up * 0.5f, Color.green, 10);
-                        Debug.Log(_angle);
+                        //Debug.DrawLine(npcLeft[i] + Vector3.up * 0.5f, _edgeLr.A + Vector3.up * 0.5f, Color.green, 10);
+                        //Debug.Log(_angle);
                     }
                     continue;
                 }
                 _newLeftT = new Triangle(_edgeLr.A, _edgeLr.B, npcLeft[i]);
                 if (!IsTriangleValid(_newLeftT, _vertices))
                 {
+                    if (debug && _vertices.Count == count)
+                    {
+                        Debug.DrawLine(_newLeftT.A + Vector3.up * (0.5f + max), _newLeftT.B + Vector3.up * (0.5f + max), Color.green, 10);
+                        Debug.DrawLine(_newLeftT.B + Vector3.up * (0.5f + max), _newLeftT.C + Vector3.up * (0.5f + max), Color.green, 10);
+                        Debug.DrawLine(_newLeftT.C + Vector3.up * (0.5f + max), _newLeftT.A + Vector3.up * (0.5f + max), Color.green, 10);
+                    }
                     _newLeftT = null;
                     continue;
                 }
@@ -316,16 +324,23 @@ public class Delaunay
                 float _angle = Vector2.SignedAngle(GetVector2(npcRight[i] - _edgeLr.B).normalized, _edgeLr.GetNormal());
                 if (_angle <= 0)
                 {
-                    if (_vertices.Count == 8)
+                    if (_vertices.Count == count)
                     {
-                        Debug.DrawLine(npcRight[i] + Vector3.up * 0.5f, _edgeLr.B + Vector3.up * 0.5f, Color.green, 10);
-                        Debug.Log(_angle);
+                        //Debug.DrawLine(npcRight[i] + Vector3.up * 0.5f, _edgeLr.B + Vector3.up * 0.5f, Color.green, 10);
+                        //Debug.Log(_angle);
                     }
                     continue;
                 }
                 _newRightT = new Triangle(_edgeLr.A, _edgeLr.B, npcRight[i]);
                 if (!IsTriangleValid(_newRightT, _vertices))
                 {
+                    if(debug && _vertices.Count == count)
+                    {
+
+                        Debug.DrawLine(_newRightT.A + Vector3.up * (0.5f + max), _newRightT.B + Vector3.up * (0.5f + max), Color.green, 10);
+                        Debug.DrawLine(_newRightT.B + Vector3.up * (0.5f + max), _newRightT.C + Vector3.up * (0.5f + max), Color.green, 10);
+                        Debug.DrawLine(_newRightT.C + Vector3.up * (0.5f + max), _newRightT.A + Vector3.up * (0.5f + max), Color.green, 10);
+                    }
                     _newRightT = null;
                     continue;
                 }
@@ -355,13 +370,27 @@ public class Delaunay
             }
             else
             {
-                if (_vertices.Count == 8)
+                if (_vertices.Count == count)
                     Debug.Log("finish");
                 break;
             }
-            if (_vertices.Count == 8)
+            if (_vertices.Count == count)
                 Debug.DrawLine(_edgeLr.A +Vector3.up*1.25f, _edgeLr.B + Vector3.up * 2, Color.magenta, 10);
             max++;
+        }
+        for (int j = 0; j < _triangles.Count; j++)
+        {
+            Triangle _t = _triangles[j];
+            for (int i = 0; i < _vertices.Count; i++)
+            {
+                if (_t.ContainsPoint(_vertices[i])) continue;
+                if (_t.IsInCircle(_vertices[i]))
+                {
+                    _triangles.Remove(_t);
+                    j--;
+                    break;
+                }
+            }
         }
         return new DelaunayGroup(_triangles, _vertices);
     }
