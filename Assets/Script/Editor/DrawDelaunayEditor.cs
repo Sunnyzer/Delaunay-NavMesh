@@ -19,14 +19,9 @@ public class DrawDelaunayEditor : Editor
             GeneratePoint();
             eTarget.Compute();
         }
-            
-        if (GUILayout.Button("GeneratePoint"))
-            GeneratePoint();
     }
     private void OnSceneGUI()
     {
-        //GeneratePoint();
-        //eTarget.Compute();
         Handles.color = Color.white;
         for (int i = 0; i < eTarget.Vertices.Count && i < 10000; i++)
         {
@@ -47,7 +42,6 @@ public class DrawDelaunayEditor : Editor
             Triangle _t = eTarget.Triangles[i];
             if (_t == null) continue;
             Vector3 _center = _t.GetCenterTriangle();
-            //Handles.DrawWireDisc(_center, Vector3.up, Vector3.Distance(_center, _t.A));
             Handles.DrawLine(_t.A, _t.B);
             Handles.DrawLine(_t.B, _t.C);
             Handles.DrawLine(_t.C, _t.A);

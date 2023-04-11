@@ -22,9 +22,6 @@ public class DrawDelaunay : MonoBehaviour
     }
     public void Compute()
     {
-        NavMeshTriangulation navMeshTriangulation = NavMesh.CalculateTriangulation();
-        //vertices = navMeshTriangulation.vertices.ToList();
-        //vertices.FindAll(v => v );
         Geometry _geometry = delaunay.ComputeDelaunay(vertices);
         Triangles = _geometry.Triangles;
         vertices = _geometry.Vertices;
