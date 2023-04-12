@@ -12,7 +12,16 @@ public abstract class Geometry
     public List<Vector3> Vertices => vertices;
     public List<Triangle> Triangles => triangles;
     public Dictionary<Vector3, List<Vector3>> PointConnections => pointConnections;
-    public abstract Vector3 GetLowestPoint();
+    public virtual Vector3 GetLowestPointRight()
+    {
+        List<Vector3> _test = new List<Vector3>(vertices);
+        return _test.OrderBy(v => v.z - v.x * 0.001f).First();
+    }
+    public virtual Vector3 GetLowestPointLeft()
+    {
+        List<Vector3> _test = new List<Vector3>(vertices);
+        return _test.OrderBy(v => v.z + v.x * 0.001f).First();
+    }
     public abstract Vector3 GetHighestPoint();
     public abstract bool ContainsPoint(Vector3 _point);
 }
@@ -78,16 +87,16 @@ public class Triangle : Geometry
             return true;
         return false;
     }
-    public override Vector3 GetLowestPoint()
-    {
-        if (A.z < B.z && A.z < C.z)
-            return A;
-        if (B.z < A.z && B.z < C.z)
-            return B;
-        if(C.z < A.z && C.z < B.z)
-            return C;
-        return A;
-    }
+    //public override Vector3 GetLowestPointRight()
+    //{
+    //    List<Vector3> _test = new List<Vector3>(vertices);
+    //    return _test.OrderBy(v => v.z - v.x * 0.7f).First();
+    //}
+    //public override Vector3 GetLowestPointLeft()
+    //{
+    //    List<Vector3> _test = new List<Vector3>(vertices);
+    //    return _test.OrderBy(v => v.z + v.x * 0.7f).First();
+    //}
     public override Vector3 GetHighestPoint()
     {
         if (A.z > B.z && A.z > C.z)
@@ -107,6 +116,7 @@ public class Triangle : Geometry
         Debug.DrawLine(B + _offset, C + _offset, color, _duration);
         Debug.DrawLine(C + _offset, A + _offset, color, _duration);
     }
+
     public static implicit operator bool(Triangle _t)
     {
         return _t != null;
@@ -121,15 +131,16 @@ public class Edge : Geometry
     {
         return Vector3.Distance(_point, A) < 0.001f || Vector3.Distance(_point, B) < 0.001f;
     }
-    public override Vector3 GetLowestPoint()
-    {
-        if (A.z > B.z)
-            return B;
-        else if (A.z < B.z)
-            return A;
-        else
-            return A;
-    }
+    //public override Vector3 GetLowestPointRight()
+    //{
+    //    List<Vector3> _test = new List<Vector3>(vertices);
+    //    return _test.OrderBy(v => v.z - v.x * 0.001f).First();
+    //}
+    //public override Vector3 GetLowestPointLeft()
+    //{
+    //    List<Vector3> _test = new List<Vector3>(vertices);
+    //    return _test.OrderBy(v => v.z + v.x * 0.7f).First();
+    //}
     public override Vector3 GetHighestPoint()
     {
         if (A.z < B.z)
@@ -158,6 +169,7 @@ public class Edge : Geometry
     {
         return Delaunay.GetVector2(A - B).normalized;
     }
+
 }
 [Serializable]
 public class DelaunayGroup : Geometry
@@ -181,10 +193,16 @@ public class DelaunayGroup : Geometry
         }
         vertices = _vertices;
     }
-    public override Vector3 GetLowestPoint()
-    {
-        return vertices.OrderBy(v => v.z).First();
-    }
+    //public override Vector3 GetLowestPointRight()
+    //{
+    //    List<Vector3> _test = new List<Vector3>(vertices);
+    //    return _test.OrderBy(v => v.z - v.x * 0.7f).First();
+    //}
+    //public override Vector3 GetLowestPointLeft()
+    //{
+    //    List<Vector3> _test = new List<Vector3>(vertices);
+    //    return _test.OrderBy(v => v.z + v.x * 0.7f).First();
+    //}
     public override Vector3 GetHighestPoint()
     {
         return vertices.OrderBy(v => v.z).Last();
@@ -197,6 +215,7 @@ public class DelaunayGroup : Geometry
             return false;
         return true;
     }
+
 }
 
 [Serializable]
@@ -277,12 +296,24 @@ public class Delaunay
         List<Triangle> _triangles = RecombineList(_leftGeo.Triangles, _rightGeo.Triangles);
         List<Vector3> _vertices = RecombineList(_leftGeo.Vertices, _rightGeo.Vertices);
 
-        Vector3 _leftMin = _leftGeo.GetLowestPoint();
-        Vector3 _rightMin = _rightGeo.GetLowestPoint();
+        Vector3 _leftMin = _leftGeo.GetLowestPointLeft();
+        Vector3 _rightMin = _rightGeo.GetLowestPointRight();
 
         Edge _edgeLr = new Edge(_leftMin, _rightMin);
-        if(debug && (inverse ? !(_vertices.Count == count) : _vertices.Count == count))
+        Edge _edgeTest = new Edge(_leftMin, _leftGeo.Vertices.OrderBy(v => v.z + v.x * 0.001f).ToArray()[1]);
+        if (Vector2.SignedAngle(_edgeLr.GetNormal(), _edgeTest.GetNormal()) < 0)
+            _edgeLr = new Edge(_leftGeo.Vertices.OrderBy(v => v.z + v.x * 0.001f).ToArray()[1], _rightMin);
+        //Debug.Log();
+
+        if(IsActiveDebug(_vertices.Count))
+        {
+            if(Vector2.SignedAngle(_edgeLr.GetNormal(), _edgeTest.GetNormal()) < 0)
+            {
+                Debug.DrawLine(_leftMin + Vector3.up, _leftGeo.Vertices.OrderBy(v => v.z + v.x * 0.001f).ToArray()[1] + Vector3.up, Color.blue, debugDuration);
+            }
+            else
             Debug.DrawLine(_leftMin + Vector3.up, _rightMin + Vector3.up, Color.red, debugDuration);
+        }
 
         int max = 0;
         int _iteration = 0;
@@ -374,47 +405,53 @@ public class Delaunay
             if (debug && (inverse ? !(_vertices.Count == count) : _vertices.Count == count))
             {
 
-                Debug.DrawLine(_edgeLr.A +Vector3.up * (1.25f + _iteration), _edgeLr.B + Vector3.up * (2 + _iteration), Color.magenta, debugDuration);
+                Debug.DrawLine(_edgeLr.A + Vector3.up * (1.25f + _iteration), _edgeLr.B + Vector3.up * (2 + _iteration), Color.magenta, debugDuration);
             }
             max++;
         }
+        _triangles = RemoveBadTriangles(_triangles, _vertices);
+        return new DelaunayGroup(_triangles, _vertices);
+    }
+    List<Triangle> RemoveBadTriangles(List<Triangle> _triangles, List<Vector3> _vertices)
+    {
+        int i = 0;
+        int _count = _vertices.Count;
         for (int j = 0; j < _triangles.Count; j++)
         {
             Triangle _t = _triangles[j];
-            if (_t.A.x == _t.B.x && _t.A.x == _t.C.x ||
-                _t.A.z == _t.B.z && _t.A.z == _t.C.z)
+            if (_t.A.x == _t.B.x && _t.A.x == _t.C.x || _t.A.z == _t.B.z && _t.A.z == _t.C.z)
             {
                 _triangles.Remove(_t);
                 j--;
                 continue;
             }
-            for (int i = 0; i < _vertices.Count; i++)
+            i = 0;
+            for (; i < _count; i++)
             {
-                if (_t.ContainsPoint(_vertices[i])) continue;
+                Vector3 _v = _vertices[i];
+                if (_t.ContainsPoint(_v)) continue;
                 Vector2 _center2D = GetVector2(_t.GetCenterTriangle());
-                Vector2 _point2D = GetVector2(_vertices[i]);
+                Vector2 _point2D = GetVector2(_v);
                 float _distanceP = Vector2.Distance(_center2D, _point2D);
                 float _radius = Vector2.Distance(_center2D, Delaunay.GetVector2(_t.A));
                 if (_distanceP <= _radius - 0.001f)
                 {
                     _triangles.Remove(_t);
-                    j--;
+                    --j;
                     break;
                 }
             }
         }
-        return new DelaunayGroup(_triangles, _vertices);
+        return _triangles;
     }
     public bool IsTriangleValid(Triangle _t, List<Vector3> _vertices)
     {
-        for (int i = 0; i < _vertices.Count; i++)
+        int _count = _vertices.Count;
+        for (int i = 0; i < _count; i++)
         {
             Vector3 _v = _vertices[i];
             if (_t.ContainsPoint(_v)) continue;
-            if (_t.IsInCircle(_v)) 
-            {
-                return false;
-            }
+            if (_t.IsInCircle(_v)) return false;
         }
         return true;
     }
