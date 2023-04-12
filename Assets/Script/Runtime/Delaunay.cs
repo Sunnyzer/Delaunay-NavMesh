@@ -23,57 +23,6 @@ public class Triangle : Geometry
     public Vector3 A;
     public Vector3 B;
     public Vector3 C;
-    public override bool ContainsPoint(Vector3 _point)
-    {
-        Vector2 _point2D = Delaunay.GetVector2(_point);
-        return Vector2.Distance(_point2D, Delaunay.GetVector2(A)) < 0.00001f || Vector2.Distance(_point2D, Delaunay.GetVector2(B)) < 0.00001f || Vector2.Distance(_point2D, Delaunay.GetVector2(C)) < 0.00001f;
-    }
-    public Vector3 GetCenterTriangle()
-    {
-        float d = (A.x * (B.z - C.z) + B.x * (C.z - A.z) + C.x * (A.z - B.z)) * 2;
-        float AX2 = Mathf.Pow(A.x, 2f);
-        float AY2 = Mathf.Pow(A.z, 2f);
-        float BX2 = Mathf.Pow(B.x, 2f);
-        float BY2 = Mathf.Pow(B.z, 2f);
-        float CX2 = Mathf.Pow(C.x, 2f);
-        float CY2 = Mathf.Pow(C.z, 2f);
-        float x = (1/d) * ((AX2 + AY2) * (B.z - C.z) + (BX2 + BY2) * (C.z - A.z) + (CX2 + CY2) * (A.z - B.z));
-        float z = (1/d) * ((AX2 + AY2) * (C.x - B.x) + (BX2 + BY2) * (A.x - C.x) + (CX2 + CY2) * (B.x - A.x));
-        return new Vector3(x, 0, z);
-    }
-    public bool IsInCircle(Vector3 _point)
-    {
-        Vector2 _center2D = Delaunay.GetVector2(GetCenterTriangle());
-        Vector2 _point2D = Delaunay.GetVector2(_point);
-        float _distanceP = Vector2.Distance(_center2D, _point2D);
-        float _radius = Vector2.Distance(_center2D, Delaunay.GetVector2(A));
-        if(Mathf.Abs(_distanceP - _radius) < 0.1f)
-            Debug.Log(_distanceP +" "+_radius);
-        if(_distanceP <= _radius - 0.001f)
-            return true;
-        return false;
-    }
-    public override Vector3 GetLowestPoint()
-    {
-        if (A.z - B.z <= 0.001f && A.z <= 0.001f)
-            return A;
-        if (B.z < A.z && B.z < C.z)
-            return B;
-        if(C.z < A.z && C.z < B.z)
-            return C;
-        return A;
-    }
-    public override Vector3 GetHighestPoint()
-    {
-        if (A.z > B.z && A.z > C.z)
-            return A;
-        if (B.z > A.z && B.z > C.z)
-            return B;
-        if (C.z > A.z && C.z > B.z)
-            return C;
-        return A;
-    }
-
     public Triangle(Vector3 a, Vector3 b, Vector3 c)
     {
         A = a;
@@ -100,12 +49,70 @@ public class Triangle : Geometry
         pointConnections.Add(C, new List<Vector3>(_connect));
         _connect.Clear();
     }
+    
+    public override bool ContainsPoint(Vector3 _point)
+    {
+        Vector2 _point2D = Delaunay.GetVector2(_point);
+        return Vector2.Distance(_point2D, Delaunay.GetVector2(A)) < 0.00001f || Vector2.Distance(_point2D, Delaunay.GetVector2(B)) < 0.00001f || Vector2.Distance(_point2D, Delaunay.GetVector2(C)) < 0.00001f;
+    }
+    public Vector3 GetCenterTriangle()
+    {
+        float d = (A.x * (B.z - C.z) + B.x * (C.z - A.z) + C.x * (A.z - B.z)) * 2;
+        float AX2 = Mathf.Pow(A.x, 2f);
+        float AY2 = Mathf.Pow(A.z, 2f);
+        float BX2 = Mathf.Pow(B.x, 2f);
+        float BY2 = Mathf.Pow(B.z, 2f);
+        float CX2 = Mathf.Pow(C.x, 2f);
+        float CY2 = Mathf.Pow(C.z, 2f);
+        float x = (1/d) * ((AX2 + AY2) * (B.z - C.z) + (BX2 + BY2) * (C.z - A.z) + (CX2 + CY2) * (A.z - B.z));
+        float z = (1/d) * ((AX2 + AY2) * (C.x - B.x) + (BX2 + BY2) * (A.x - C.x) + (CX2 + CY2) * (B.x - A.x));
+        return new Vector3(x, 0, z);
+    }
+    public bool IsInCircle(Vector3 _point)
+    {
+        Vector2 _center2D = Delaunay.GetVector2(GetCenterTriangle());
+        Vector2 _point2D = Delaunay.GetVector2(_point);
+        float _distanceP = Vector2.Distance(_center2D, _point2D);
+        float _radius = Vector2.Distance(_center2D, Delaunay.GetVector2(A));
+        if(_distanceP <= _radius - 0.001f)
+            return true;
+        return false;
+    }
+    public override Vector3 GetLowestPoint()
+    {
+        if (A.z < B.z && A.z < C.z)
+            return A;
+        if (B.z < A.z && B.z < C.z)
+            return B;
+        if(C.z < A.z && C.z < B.z)
+            return C;
+        return A;
+    }
+    public override Vector3 GetHighestPoint()
+    {
+        if (A.z > B.z && A.z > C.z)
+            return A;
+        if (B.z > A.z && B.z > C.z)
+            return B;
+        if (C.z > A.z && C.z > B.z)
+            return C;
+        return A;
+    }
+    public void DrawTriangle(Vector3 _offset, float _duration = 0, Color? _color = null)
+    {
+        Color color = Color.black;
+        if (_color != null)
+            color = _color.Value;
+        Debug.DrawLine(A + _offset, B + _offset, color, _duration);
+        Debug.DrawLine(B + _offset, C + _offset, color, _duration);
+        Debug.DrawLine(C + _offset, A + _offset, color, _duration);
+    }
     public static implicit operator bool(Triangle _t)
     {
         return _t != null;
     }
 }
-
+[Serializable]
 public class Edge : Geometry
 {
     public Vector3 A;
@@ -140,7 +147,8 @@ public class Edge : Geometry
         vertices.Add(A);
         vertices.Add(B);
         pointConnections.Add(A, new List<Vector3>() { B });
-        pointConnections.Add(B, new List<Vector3>() { A });
+        if(!pointConnections.ContainsKey(B))
+            pointConnections.Add(B, new List<Vector3>() { A });
     }
     public static implicit operator bool(Edge _e)
     {
@@ -151,7 +159,7 @@ public class Edge : Geometry
         return Delaunay.GetVector2(A - B).normalized;
     }
 }
-
+[Serializable]
 public class DelaunayGroup : Geometry
 {
     
@@ -160,7 +168,8 @@ public class DelaunayGroup : Geometry
         triangles = _triangles;
         for (int i = 0; i < _vertices.Count; i++)
         {
-            pointConnections.Add(_vertices[i], new List<Vector3>());
+            if(!pointConnections.ContainsKey(_vertices[i]))
+                pointConnections.Add(_vertices[i], new List<Vector3>());
         }
         foreach (var item in pointConnections)
         {
@@ -196,7 +205,9 @@ public class Delaunay
     [SerializeField] List<Triangle> triangles = new List<Triangle>();
     [NonSerialized] public List<Vector3> Vertices = new List<Vector3>();
     [SerializeField] bool debug = false;
-    static int maxIte = 0;
+    [SerializeField] bool inverse = false;
+    [SerializeField] int maxIte = 3;
+    [SerializeField] int debugDuration = 0;
     int count = 0;
     public static Vector2 GetVector2(Vector3 _point)
     {
@@ -211,62 +222,71 @@ public class Delaunay
         }).ToList();
         return ComputeDelaunayWithoutOrder(_vertices);
     }
+    public List<Vector3> SplitVertices(List<Vector3> _toSplit, out List<Vector3> _rightSplit)
+    {
+        int _count = _toSplit.Count / 2;
+        List<Vector3> _verticesLeft = _toSplit.GetRange(0, _count);
+        _rightSplit = _toSplit.GetRange(_count, _count + (_toSplit.Count % 2 == 0 ? 0 : 1));
+        return _verticesLeft;
+    }
+    public List<T> RecombineList<T>(List<T> _toRecombineA, List<T> _toRecombineB)
+    {
+        List<T> _list = new List<T>(_toRecombineA);
+        _list.AddRange(_toRecombineB);
+        return _list;
+    }
+    public Geometry GiveGeo(List<Vector3> _vertices)
+    {
+        Geometry _geo = null;
+        if (_vertices.Count == 2)
+            _geo = new Edge(_vertices[0], _vertices[1]);
+        else if (_vertices.Count == 3)
+            _geo = new Triangle(_vertices[0], _vertices[1], _vertices[2]);
+        else
+            _geo = ComputeDelaunayWithoutOrder(_vertices);
+        return _geo;
+    }
     private Geometry ComputeDelaunayWithoutOrder(List<Vector3> _vertices)
     {
         //Create And Split vertices
-        List<Vector3> _verticesLeft = new List<Vector3>(_vertices);
-        List<Vector3> _verticesRight = new List<Vector3>(_vertices);
-        int _count = _vertices.Count / 2;
-        if (_vertices.Count % 2 != 0)
-            _verticesLeft.RemoveRange(_count, _count + 1);
-        else
-            _verticesLeft.RemoveRange(_count, _count);
+        List<Vector3> _verticesLeft = SplitVertices(_vertices, out List<Vector3> _verticesRight);
 
-        _verticesRight.RemoveRange(0, _count);
+        Geometry _leftGeo = GiveGeo(_verticesLeft);
+        Geometry _rightGeo = GiveGeo(_verticesRight);
 
-        Geometry _leftGeo = null;
-        Geometry _rightGeo = null;
-        if (_verticesLeft.Count == 1 && _verticesRight.Count == 1)
-            return new Edge(_verticesLeft[0], _verticesRight[0]);
-        else if (_verticesLeft.Count == 1 && _verticesRight.Count == 2)
-            return new Triangle(_verticesLeft[0], _verticesRight[0], _verticesRight[1]);
-        else if (_verticesLeft.Count == 2 && _verticesRight.Count == 1)
-            return new Triangle(_verticesLeft[0], _verticesLeft[1], _verticesRight[0]);
-
-        if (_verticesLeft.Count == 2)
-            _leftGeo = new Edge(_verticesLeft[0], _verticesLeft[1]);
-        else if (_verticesLeft.Count == 3)
-            _leftGeo = new Triangle(_verticesLeft[0], _verticesLeft[1], _verticesLeft[2]);
-        else
-            _leftGeo = ComputeDelaunayWithoutOrder(_verticesLeft);
-
-        if (_verticesRight.Count == 2)
-            _rightGeo = new Edge(_verticesRight[0], _verticesRight[1]);
-        else if (_verticesRight.Count == 3)
-            _rightGeo = new Triangle(_verticesRight[0], _verticesRight[1], _verticesRight[2]);
-        else
-            _rightGeo = ComputeDelaunayWithoutOrder(_verticesRight);
         Geometry _geo = Link(_leftGeo, _rightGeo);
         triangles = _geo.Triangles;
         return _geo;
     }
+    float GetAngle(Vector3 _normalA, Vector3 _normalB)
+    {
+        float _dot = Vector2.Dot(_normalA, _normalB);
+        float _angle = Mathf.Acos(_dot) * Mathf.Rad2Deg;
+        return _angle;
+    }
+    bool IsAngleValid(float _angle)
+    {
+        return _angle > 0 && _angle < 179.9f;
+    }
+    private bool IsActiveDebug(int _count)
+    {
+        return debug && (inverse ? !(_count == count) : _count == count);
+    }
     public Geometry Link(Geometry _leftGeo, Geometry _rightGeo)
     {
-        List<Triangle> _triangles = new List<Triangle>(_leftGeo.Triangles);
-        List<Vector3> _vertices = new List<Vector3>(_leftGeo.Vertices);
-        _vertices.AddRange(_rightGeo.Vertices);
-        _triangles.AddRange(_rightGeo.Triangles);
+        List<Triangle> _triangles = RecombineList(_leftGeo.Triangles, _rightGeo.Triangles);
+        List<Vector3> _vertices = RecombineList(_leftGeo.Vertices, _rightGeo.Vertices);
 
-        Vector3 _leftMin = _leftGeo.GetLowestPoint(); 
+        Vector3 _leftMin = _leftGeo.GetLowestPoint();
         Vector3 _rightMin = _rightGeo.GetLowestPoint();
 
         Edge _edgeLr = new Edge(_leftMin, _rightMin);
-        if(_vertices.Count == count)
-        Debug.DrawLine(_leftMin + Vector3.up, _rightMin + Vector3.up, Color.red, 10);
+        if(debug && (inverse ? !(_vertices.Count == count) : _vertices.Count == count))
+            Debug.DrawLine(_leftMin + Vector3.up, _rightMin + Vector3.up, Color.red, debugDuration);
 
         int max = 0;
         int _iteration = 0;
-        while (max < 50)
+        while (max < 100)
         {
             List<Vector3> npcLeft = new List<Vector3>();
             List<Vector3> npcRight = new List<Vector3>();
@@ -274,43 +294,28 @@ public class Delaunay
             npcLeft.AddRange(_leftGeo.PointConnections[_edgeLr.A]);
             npcRight.AddRange(_rightGeo.PointConnections[_edgeLr.B]);
 
-            npcLeft.OrderBy(v =>
-            {
-                float _dot = Vector2.Dot(GetVector2(_leftMin - v).normalized, _edgeLr.GetNormal());
-                float _angle = Mathf.Acos(_dot) * Mathf.Rad2Deg;
-                return _angle;
-            });
-            npcRight.OrderBy(v =>
-            {
-                float _dot = Vector2.Dot(GetVector2(_rightMin - v).normalized, _edgeLr.GetNormal());
-                float _angle = Mathf.Acos(_dot) * Mathf.Rad2Deg;
-                return _angle;
-            });
+            Vector2 _edgeNormal = _edgeLr.GetNormal();
+            npcLeft.OrderBy(v => GetAngle(GetVector2(_edgeLr.A - v).normalized, _edgeNormal));
+            npcRight.OrderBy(v => GetAngle(GetVector2(_edgeLr.B - v).normalized, _edgeNormal));
 
             Triangle _newLeftT = null;
             int _npcLeftId = int.MaxValue;
             for (int i = 0; i < npcLeft.Count; i++)
             {
                 float _angle = Vector2.SignedAngle(GetVector2(npcLeft[i] - _edgeLr.A).normalized, _edgeLr.GetNormal());
-                if (_angle <= 0)
+                if (!IsAngleValid(_angle))
                 {
-                    if (_vertices.Count == count)
-                    {
-                        //Debug.DrawLine(npcLeft[i] + Vector3.up * 0.5f, _edgeLr.A + Vector3.up * 0.5f, Color.green, 10);
-                        //Debug.Log(_angle);
-                    }
                     continue;
                 }
                 _newLeftT = new Triangle(_edgeLr.A, _edgeLr.B, npcLeft[i]);
                 if (!IsTriangleValid(_newLeftT, _vertices))
                 {
-                    if (debug && _vertices.Count == count)
+                    if (IsActiveDebug(_vertices.Count) && _iteration > maxIte)
                     {
-                        Debug.DrawLine(_newLeftT.A + Vector3.up * (0.5f + max), _newLeftT.B + Vector3.up * (0.5f + max), Color.green, 10);
-                        Debug.DrawLine(_newLeftT.B + Vector3.up * (0.5f + max), _newLeftT.C + Vector3.up * (0.5f + max), Color.green, 10);
-                        Debug.DrawLine(_newLeftT.C + Vector3.up * (0.5f + max), _newLeftT.A + Vector3.up * (0.5f + max), Color.green, 10);
+                        _newLeftT.DrawTriangle(Vector3.up * (0.5f + max), debugDuration, Color.green);
                     }
                     _newLeftT = null;
+                    _npcLeftId = int.MaxValue;
                     continue;
                 }
                 _npcLeftId = i;
@@ -322,26 +327,19 @@ public class Delaunay
             {
                 //if (i >= _npcRightId) break;
                 float _angle = Vector2.SignedAngle(GetVector2(npcRight[i] - _edgeLr.B).normalized, _edgeLr.GetNormal());
-                if (_angle <= 0)
+                if (!IsAngleValid(_angle))
                 {
-                    if (_vertices.Count == count)
-                    {
-                        //Debug.DrawLine(npcRight[i] + Vector3.up * 0.5f, _edgeLr.B + Vector3.up * 0.5f, Color.green, 10);
-                        //Debug.Log(_angle);
-                    }
                     continue;
                 }
                 _newRightT = new Triangle(_edgeLr.A, _edgeLr.B, npcRight[i]);
                 if (!IsTriangleValid(_newRightT, _vertices))
                 {
-                    if(debug && _vertices.Count == count)
+                    if(IsActiveDebug(_vertices.Count) && _iteration > maxIte)
                     {
-
-                        Debug.DrawLine(_newRightT.A + Vector3.up * (0.5f + max), _newRightT.B + Vector3.up * (0.5f + max), Color.green, 10);
-                        Debug.DrawLine(_newRightT.B + Vector3.up * (0.5f + max), _newRightT.C + Vector3.up * (0.5f + max), Color.green, 10);
-                        Debug.DrawLine(_newRightT.C + Vector3.up * (0.5f + max), _newRightT.A + Vector3.up * (0.5f + max), Color.green, 10);
+                        _newRightT.DrawTriangle(Vector3.up * (0.5f + max), debugDuration, Color.green);
                     }
                     _newRightT = null;
+                    _npcRightId = int.MaxValue;
                     continue;
                 }
                 _npcRightId = i;
@@ -370,17 +368,26 @@ public class Delaunay
             }
             else
             {
-                if (_vertices.Count == count)
-                    Debug.Log("finish");
                 break;
             }
-            if (_vertices.Count == count)
-                Debug.DrawLine(_edgeLr.A +Vector3.up*1.25f, _edgeLr.B + Vector3.up * 2, Color.magenta, 10);
+            _iteration++;
+            if (debug && (inverse ? !(_vertices.Count == count) : _vertices.Count == count))
+            {
+
+                Debug.DrawLine(_edgeLr.A +Vector3.up * (1.25f + _iteration), _edgeLr.B + Vector3.up * (2 + _iteration), Color.magenta, debugDuration);
+            }
             max++;
         }
         for (int j = 0; j < _triangles.Count; j++)
         {
             Triangle _t = _triangles[j];
+            if (_t.A.x == _t.B.x && _t.A.x == _t.C.x ||
+                _t.A.z == _t.B.z && _t.A.z == _t.C.z)
+            {
+                _triangles.Remove(_t);
+                j--;
+                continue;
+            }
             for (int i = 0; i < _vertices.Count; i++)
             {
                 if (_t.ContainsPoint(_vertices[i])) continue;
@@ -388,9 +395,7 @@ public class Delaunay
                 Vector2 _point2D = GetVector2(_vertices[i]);
                 float _distanceP = Vector2.Distance(_center2D, _point2D);
                 float _radius = Vector2.Distance(_center2D, Delaunay.GetVector2(_t.A));
-                if (Mathf.Abs(_distanceP - _radius) < 0.1f)
-                    Debug.Log(_distanceP + " " + _radius);
-                if (_distanceP < _radius - 0.001f)
+                if (_distanceP <= _radius - 0.001f)
                 {
                     _triangles.Remove(_t);
                     j--;
