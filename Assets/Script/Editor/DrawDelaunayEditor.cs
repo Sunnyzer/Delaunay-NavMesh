@@ -1,5 +1,4 @@
 using System;
-using TMPro;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,21 +20,16 @@ public class DrawDelaunayEditor : Editor
     }
     private void OnSceneGUI()
     {
-            GeneratePoint();
-            eTarget.Compute();
+        GeneratePoint();
+        eTarget.Compute();
         Handles.color = Color.white;
         for (int i = 0; i < eTarget.Vertices.Count && i < 10000; i++)
         {
             Handles.Label(eTarget.Vertices[i] + Vector3.up * 0.5f, i.ToString().ToUpper());
-            if(Vector3.Distance(eTarget.Vertices[i], Camera.current.transform.position) < 5)
+            if (Vector3.Distance(eTarget.Vertices[i], Camera.current.transform.position) < 5)
                 eTarget.Vertices[i] = Handles.DoPositionHandle(eTarget.Vertices[i], Quaternion.identity);
         }
         Collider[] _colliders = Physics.OverlapBox(eTarget.transform.position, eTarget.Extends / 2);
-        Handles.color = Color.red;
-        for (int i = 0; i < _colliders.Length; i++)
-        {
-            Handles.DrawWireCube(_colliders[i].transform.position, _colliders[i].bounds.extents * 2);
-        }
         Handles.color = Color.black;
         if (eTarget.Triangles == null) return;
         for (int i = 0; i < eTarget.Triangles.Count && i < 10000; i++)
@@ -43,9 +37,19 @@ public class DrawDelaunayEditor : Editor
             Triangle _t = eTarget.Triangles[i];
             if (_t == null) continue;
             Vector3 _center = _t.GetCenterTriangle();
-            Handles.DrawLine(_t.A, _t.B);
-            Handles.DrawLine(_t.B, _t.C);
-            Handles.DrawLine(_t.C, _t.A);
+            float _ratio = 0.25f * i;
+            _ratio = 0;
+            Handles.DrawLine(_t.A + Vector3.up * _ratio, _t.B + Vector3.up * _ratio, (float)(i * 0.15f));
+            Handles.DrawLine(_t.B + Vector3.up * _ratio, _t.C + Vector3.up * _ratio, (float)(i * 0.15f));
+            Handles.DrawLine(_t.C + Vector3.up * _ratio, _t.A + Vector3.up * _ratio, (float)(i * 0.15f));
+        }
+        Handles.color = Color.red;
+        for (int i = 0; i < eTarget.Path.Count; i++)
+        {
+            foreach (var neighbor in eTarget.Path[i].neighbors.Values)
+            {
+                Handles.DrawLine(eTarget.Path[i].position, eTarget.Path[neighbor]);
+            }
         }
     }
     public void GeneratePoint()

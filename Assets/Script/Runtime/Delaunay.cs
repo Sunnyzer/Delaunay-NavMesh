@@ -32,6 +32,7 @@ public class Triangle : Geometry
     public Vector3 A;
     public Vector3 B;
     public Vector3 C;
+    [NonSerialized] public List<Triangle> neighbors = new List<Triangle>(); 
     public Triangle(Vector3 a, Vector3 b, Vector3 c)
     {
         A = a;
@@ -87,16 +88,6 @@ public class Triangle : Geometry
             return true;
         return false;
     }
-    //public override Vector3 GetLowestPointRight()
-    //{
-    //    List<Vector3> _test = new List<Vector3>(vertices);
-    //    return _test.OrderBy(v => v.z - v.x * 0.7f).First();
-    //}
-    //public override Vector3 GetLowestPointLeft()
-    //{
-    //    List<Vector3> _test = new List<Vector3>(vertices);
-    //    return _test.OrderBy(v => v.z + v.x * 0.7f).First();
-    //}
     public override Vector3 GetHighestPoint()
     {
         if (A.z > B.z && A.z > C.z)
@@ -131,16 +122,6 @@ public class Edge : Geometry
     {
         return Vector3.Distance(_point, A) < 0.001f || Vector3.Distance(_point, B) < 0.001f;
     }
-    //public override Vector3 GetLowestPointRight()
-    //{
-    //    List<Vector3> _test = new List<Vector3>(vertices);
-    //    return _test.OrderBy(v => v.z - v.x * 0.001f).First();
-    //}
-    //public override Vector3 GetLowestPointLeft()
-    //{
-    //    List<Vector3> _test = new List<Vector3>(vertices);
-    //    return _test.OrderBy(v => v.z + v.x * 0.7f).First();
-    //}
     public override Vector3 GetHighestPoint()
     {
         if (A.z < B.z)
@@ -193,16 +174,7 @@ public class DelaunayGroup : Geometry
         }
         vertices = _vertices;
     }
-    //public override Vector3 GetLowestPointRight()
-    //{
-    //    List<Vector3> _test = new List<Vector3>(vertices);
-    //    return _test.OrderBy(v => v.z - v.x * 0.7f).First();
-    //}
-    //public override Vector3 GetLowestPointLeft()
-    //{
-    //    List<Vector3> _test = new List<Vector3>(vertices);
-    //    return _test.OrderBy(v => v.z + v.x * 0.7f).First();
-    //}
+
     public override Vector3 GetHighestPoint()
     {
         return vertices.OrderBy(v => v.z).Last();
@@ -232,6 +204,7 @@ public class Delaunay
     {
         return new Vector2(_point.x, _point.z);
     }
+
     public Geometry ComputeDelaunay(List<Vector3> _vertices)
     {
         count = _vertices.Count;
@@ -241,6 +214,19 @@ public class Delaunay
         }).ToList();
         return ComputeDelaunayWithoutOrder(_vertices);
     }
+    private Geometry ComputeDelaunayWithoutOrder(List<Vector3> _vertices)
+    {
+        //Create And Split vertices
+        List<Vector3> _verticesLeft = SplitVertices(_vertices, out List<Vector3> _verticesRight);
+
+        Geometry _leftGeo = GiveGeo(_verticesLeft);
+        Geometry _rightGeo = GiveGeo(_verticesRight);
+
+        Geometry _geo = Link(_leftGeo, _rightGeo);
+        triangles = _geo.Triangles;
+        return _geo;
+    }
+
     public List<Vector3> SplitVertices(List<Vector3> _toSplit, out List<Vector3> _rightSplit)
     {
         int _count = _toSplit.Count / 2;
@@ -263,18 +249,6 @@ public class Delaunay
             _geo = new Triangle(_vertices[0], _vertices[1], _vertices[2]);
         else
             _geo = ComputeDelaunayWithoutOrder(_vertices);
-        return _geo;
-    }
-    private Geometry ComputeDelaunayWithoutOrder(List<Vector3> _vertices)
-    {
-        //Create And Split vertices
-        List<Vector3> _verticesLeft = SplitVertices(_vertices, out List<Vector3> _verticesRight);
-
-        Geometry _leftGeo = GiveGeo(_verticesLeft);
-        Geometry _rightGeo = GiveGeo(_verticesRight);
-
-        Geometry _geo = Link(_leftGeo, _rightGeo);
-        triangles = _geo.Triangles;
         return _geo;
     }
     float GetAngle(Vector3 _normalA, Vector3 _normalB)
@@ -300,14 +274,16 @@ public class Delaunay
         Vector3 _rightMin = _rightGeo.GetLowestPointRight();
 
         Edge _edgeLr = new Edge(_leftMin, _rightMin);
-        Edge _edgeTest = new Edge(_leftMin, _leftGeo.Vertices.OrderBy(v => v.z + v.x * 0.001f).ToArray()[1]);
-        if (Vector2.SignedAngle(_edgeLr.GetNormal(), _edgeTest.GetNormal()) < 0)
+        Edge _edgeL = new Edge(_leftMin, _leftGeo.Vertices.OrderBy(v => v.z + v.x * 0.001f).ToArray()[1]);
+        Edge _edgeR = new Edge(_rightGeo.Vertices.OrderBy(v => v.z - v.x * 0.001f).ToArray()[1], _rightMin);
+        if (Vector2.SignedAngle(_edgeLr.GetNormal(), _edgeL.GetNormal()) < 0)
             _edgeLr = new Edge(_leftGeo.Vertices.OrderBy(v => v.z + v.x * 0.001f).ToArray()[1], _rightMin);
-        //Debug.Log();
+        else if (Vector2.SignedAngle(_edgeLr.GetNormal(), _edgeR.GetNormal()) > 0)
+            _edgeLr = new Edge(_leftMin, _rightGeo.Vertices.OrderBy(v => v.z - v.x * 0.001f).ToArray()[1]);
 
-        if(IsActiveDebug(_vertices.Count))
+        if (IsActiveDebug(_vertices.Count))
         {
-            if(Vector2.SignedAngle(_edgeLr.GetNormal(), _edgeTest.GetNormal()) < 0)
+            if(Vector2.SignedAngle(_edgeLr.GetNormal(), _edgeL.GetNormal()) < 0)
             {
                 Debug.DrawLine(_leftMin + Vector3.up, _leftGeo.Vertices.OrderBy(v => v.z + v.x * 0.001f).ToArray()[1] + Vector3.up, Color.blue, debugDuration);
             }
@@ -330,7 +306,7 @@ public class Delaunay
             npcRight.OrderBy(v => GetAngle(GetVector2(_edgeLr.B - v).normalized, _edgeNormal));
 
             Triangle _newLeftT = null;
-            int _npcLeftId = int.MaxValue;
+            float _angleL = float.MaxValue;
             for (int i = 0; i < npcLeft.Count; i++)
             {
                 float _angle = Vector2.SignedAngle(GetVector2(npcLeft[i] - _edgeLr.A).normalized, _edgeLr.GetNormal());
@@ -346,14 +322,13 @@ public class Delaunay
                         _newLeftT.DrawTriangle(Vector3.up * (0.5f + max), debugDuration, Color.green);
                     }
                     _newLeftT = null;
-                    _npcLeftId = int.MaxValue;
                     continue;
                 }
-                _npcLeftId = i;
+                _angleL = _angle;
                 break;
             }
             Triangle _newRightT = null;
-            int _npcRightId = int.MaxValue;
+            float _angleR = float.MaxValue;
             for (int i = 0; i < npcRight.Count; i++)
             {
                 //if (i >= _npcRightId) break;
@@ -370,19 +345,18 @@ public class Delaunay
                         _newRightT.DrawTriangle(Vector3.up * (0.5f + max), debugDuration, Color.green);
                     }
                     _newRightT = null;
-                    _npcRightId = int.MaxValue;
                     continue;
                 }
-                _npcRightId = i;
+                _angleR = _angle;
                 break;
             }
 
-            if(_npcLeftId < _npcRightId)
+            if(_angleL < _angleR)
             {
                 _triangles.Add(_newLeftT);
                 _edgeLr = new Edge(_newLeftT.C, _newLeftT.B);
             }
-            else if(_npcRightId < _npcLeftId)
+            else if(_angleL > _angleR)
             {
                 _triangles.Add(_newRightT);
                 _edgeLr = new Edge(_newRightT.A, _newRightT.C);
