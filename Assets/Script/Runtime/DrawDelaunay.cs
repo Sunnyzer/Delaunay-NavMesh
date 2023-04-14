@@ -17,7 +17,7 @@ public class Node
     }
 }
 
-public class DrawDelaunay : MonoBehaviour
+public class DrawDelaunay : Singleton<DrawDelaunay>
 {
     [SerializeField] Delaunay delaunay = new Delaunay();
     [SerializeField] List<Vector3> vertices = new List<Vector3>();

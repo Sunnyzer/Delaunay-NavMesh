@@ -15,13 +15,13 @@ public class DrawDelaunayEditor : Editor
         base.OnInspectorGUI();
         if (GUILayout.Button("Generate"))
         {
-            //GeneratePoint();
+            GeneratePoint();
+            eTarget.Compute();
         }
     }
     private void OnSceneGUI()
     {
-        GeneratePoint();
-        eTarget.Compute();
+        
         Handles.color = Color.white;
         for (int i = 0; i < eTarget.Vertices.Count && i < 10000; i++)
         {
