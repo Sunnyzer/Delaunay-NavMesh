@@ -107,7 +107,17 @@ public class Triangle : Geometry
         Debug.DrawLine(B + _offset, C + _offset, color, _duration);
         Debug.DrawLine(C + _offset, A + _offset, color, _duration);
     }
-
+    public bool IsPointInTriangle(Vector3 _point)
+    {
+        float _a = (A.x - _point.x) * (B.z - _point.z) - (A.z - _point.z) * (B.x - _point.x);
+        float _b = (B.x - _point.x) * (C.z - _point.z) - (B.z - _point.z) * (C.x - _point.x);
+        float _c = (C.x - _point.x) * (A.z - _point.z) - (C.z - _point.z) * (A.x - _point.x);
+        if (_a >= 0 && _b >= 0 && _c >= 0)
+            return true;
+        if(_a < 0 && _b < 0 && _c < 0)
+            return true;
+        return false;
+    }
     public static implicit operator bool(Triangle _t)
     {
         return _t != null;

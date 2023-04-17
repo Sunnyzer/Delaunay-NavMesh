@@ -46,6 +46,7 @@ public class DrawDelaunayEditor : Editor
         Handles.color = Color.red;
         for (int i = 0; i < eTarget.Path.Count; i++)
         {
+            if (eTarget.Path[i].neighbors == null) continue;
             foreach (var neighbor in eTarget.Path[i].neighbors.Values)
             {
                 Handles.DrawLine(eTarget.Path[i].position, eTarget.Path[neighbor]);

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Analytics;
 
@@ -30,15 +31,19 @@ public class AStar : MonoBehaviour
     List<NodeData> openList = new List<NodeData>();
     List<Node> closeList = new List<Node>();
     public int current = 0;
-    public Node ClosestNode(Vector3 _start, Vector3 _end)
+    public Node ClosestNode(Vector3 _start)
     {
         DrawDelaunay _drawDelaunay = DrawDelaunay.Instance;
         if (!_drawDelaunay)
             _drawDelaunay = FindObjectOfType<DrawDelaunay>();
-        List<Node> _closestPoints = null;
         if (_drawDelaunay.Path.Count == 0) return null;
-        _closestPoints = _drawDelaunay.Path.OrderBy(n => Vector3.Distance(n.position, _start)).ToList().GetRange(0, _drawDelaunay.Path.Count >= 3 ? 3 : _drawDelaunay.Path.Count);
-        return _closestPoints.OrderBy(n => Vector3.Distance(n.position, _start) + Vector3.Distance(n.position, _end)).First();
+        int i = 0;
+        for (; i < _drawDelaunay.Triangles.Count; i++)
+            if (_drawDelaunay.Triangles[i].IsPointInTriangle(_start))
+                break;
+        if(i >= _drawDelaunay.Path.Count)
+            return null;
+        return _drawDelaunay.Path[i];
     }
     public List<Node> ComputePath()
     {
@@ -47,8 +52,8 @@ public class AStar : MonoBehaviour
         pathNode.Clear();
         closeList.Clear();
         List<Node> _pathNode = new List<Node>(); 
-        Node _start = ClosestNode(start.position, goal.position);
-        Node _goal = ClosestNode(goal.position, start.position);
+        Node _start = ClosestNode(start.position);
+        Node _goal = ClosestNode(goal.position);
         if (_start == null || _goal == null) return new List<Node>();
         NodeData _currentNode = new NodeData(_start, 0, Vector3.Distance(_start, _goal), null, null);
         List<Node> navMeshNode = FindObjectOfType<DrawDelaunay>().Path;
@@ -87,10 +92,7 @@ public class AStar : MonoBehaviour
         Edge _edgePrevious = null;
         for (NodeData _actual = _currentNode; _actual != null; _actual = _actual.previousNode)
         {
-            if (!_actual.edge)
-            {
-                break;
-            }
+            if (!_actual.edge) break;
             float gA = Vector3.Distance(_actual.edge.A, _start);
             float hA = Vector3.Distance(_actual.edge.A, _goal);
             float gB = Vector3.Distance(_actual.edge.B, _start);
@@ -100,27 +102,43 @@ public class AStar : MonoBehaviour
             //        continue;
             if (gA + hA <= gB + hB)
             {
+                bool _isSame = false;
+                for (int i = 0; i < _path.Count; i++)
+                {
+                    if (_path[i] == _actual.edge.A)
+                        _isSame = true;
+                }
+                if(!_isSame)
                     _path.Insert(0, _actual.edge.A);
             }
             else
             {
+                bool _isSame = false;
+                for (int i = 0; i < _path.Count; i++)
+                {
+                    if (_path[i] == _actual.edge.A)
+                        _isSame = true;
+                }
+                if (!_isSame)
                     _path.Insert(0, _actual.edge.B);
             }
             _edgePrevious = _actual.edge;
+            Debug.DrawLine(_edgePrevious.A + Vector3.up * 2, _edgePrevious.B + Vector3.up * 2, Color.magenta, 0);
             _pathNode.Insert(0, _actual.currentNode);
         }
         _path.Insert(0, start.position);
         _path.Add(goal.position);
-        for (int i = 0; i < _path.Count - 2; )
-        {
-            bool _hit = Physics.Linecast(_path[i], _path[i + 2]);
-            if (!_hit)
-            {
-                _path.RemoveAt(i + 1);
-                continue;
-            }
-            i++;
-        }
+
+        //for (int i = 1; i < _path.Count - 2;)
+        //{
+        //    bool _hit = Physics.Linecast(_path[i], _path[i + 2]);
+        //    if (!_hit)
+        //    {
+        //        _path.RemoveAt(i + 1);
+        //        continue;
+        //    }
+        //    i++;
+        //}
         path = _path;
         pathNode = _pathNode;
         return _pathNode;
