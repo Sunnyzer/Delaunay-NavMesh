@@ -1,8 +1,9 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Drawing;
+using System.IO;
 using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Analytics;
 
 public class NodeData
 {
@@ -26,6 +27,7 @@ public class AStar : MonoBehaviour
 {
     [SerializeField] Transform start;
     [SerializeField] Transform goal;
+    [SerializeField] LayerMask obstacleLayer;
     public List<Node> pathNode = new List<Node>();
     public List<Vector3> path = new List<Vector3>();
     List<NodeData> openList = new List<NodeData>();
@@ -51,22 +53,41 @@ public class AStar : MonoBehaviour
         openList.Clear();
         pathNode.Clear();
         closeList.Clear();
+        if (!Physics.Linecast(start.position, goal.position, obstacleLayer))
+        {
+            path.Add(start.position);
+            path.Add(goal.position);
+            return new List<Node>();
+        }
         List<Node> _pathNode = new List<Node>(); 
         Node _start = ClosestNode(start.position);
         Node _goal = ClosestNode(goal.position);
+
         if (_start == null || _goal == null) return new List<Node>();
+
         NodeData _currentNode = new NodeData(_start, 0, Vector3.Distance(_start, _goal), null, null);
         List<Node> navMeshNode = FindObjectOfType<DrawDelaunay>().Path;
         int max = 0;
-        while (_currentNode.currentNode != _goal && max < 200)
+        while (_currentNode.currentNode != _goal && max < 500)
         {
             if (_currentNode.currentNode.neighbors == null) break; 
             foreach (var _neighbor in _currentNode.currentNode.neighbors)
             {
                 Node _node = navMeshNode[_neighbor.Value];
                 if (closeList.Contains(_node)) continue;
-                float g = Vector3.Distance(_node, _start);
-                float h = Vector3.Distance(_node, _goal);
+                float g = 0;
+                float h= 0;
+                NodeData _nodeData = openList.Find(n => n.currentNode == _node);
+                g = Vector3.Distance(_node, start.position);
+                h = Vector3.Distance(_node, goal.position);
+                if(_nodeData != null)
+                {
+                    if(_nodeData.FCost <= g + h)
+                    {
+                        continue;
+                    }
+                }
+
                 openList.Add(new NodeData(_node, g, h, _currentNode, _neighbor.Key));
             }
             float fCost = float.MaxValue;
@@ -81,7 +102,7 @@ public class AStar : MonoBehaviour
                 }
             }
             if (_nextNode == null)
-                break;
+                continue;
 
             openList.Remove(_nextNode);
             _currentNode = _nextNode;
@@ -89,17 +110,13 @@ public class AStar : MonoBehaviour
             max++;
         }
         List<Vector3> _path = new List<Vector3>();
-        Edge _edgePrevious = null;
         for (NodeData _actual = _currentNode; _actual != null; _actual = _actual.previousNode)
         {
-            if (!_actual.edge) break;
-            float gA = Vector3.Distance(_actual.edge.A, _start);
-            float hA = Vector3.Distance(_actual.edge.A, _goal);
-            float gB = Vector3.Distance(_actual.edge.B, _start);
-            float hB = Vector3.Distance(_actual.edge.B, _goal);
-            //if (_edgePrevious)
-            //    if (_edgePrevious.ContainsPoint(_actual.edge.A) || _edgePrevious.ContainsPoint(_actual.edge.B))
-            //        continue;
+            if(!_actual.edge) break;
+            float gA = Vector3.Distance(_actual.edge.A, start.position);
+            float hA = Vector3.Distance(_actual.edge.A, goal.position);
+            float gB = Vector3.Distance(_actual.edge.B, start.position);
+            float hB = Vector3.Distance(_actual.edge.B, goal.position);
             if (gA + hA <= gB + hB)
             {
                 bool _isSame = false;
@@ -122,23 +139,13 @@ public class AStar : MonoBehaviour
                 if (!_isSame)
                     _path.Insert(0, _actual.edge.B);
             }
-            _edgePrevious = _actual.edge;
-            Debug.DrawLine(_edgePrevious.A + Vector3.up * 2, _edgePrevious.B + Vector3.up * 2, Color.magenta, 0);
             _pathNode.Insert(0, _actual.currentNode);
         }
-        _path.Insert(0, start.position);
         _path.Add(goal.position);
-
-        //for (int i = 1; i < _path.Count - 2;)
-        //{
-        //    bool _hit = Physics.Linecast(_path[i], _path[i + 2]);
-        //    if (!_hit)
-        //    {
-        //        _path.RemoveAt(i + 1);
-        //        continue;
-        //    }
-        //    i++;
-        //}
+        for (int i = 0; i < _path.Count; i++)
+        {
+            
+        }
         path = _path;
         pathNode = _pathNode;
         return _pathNode;
