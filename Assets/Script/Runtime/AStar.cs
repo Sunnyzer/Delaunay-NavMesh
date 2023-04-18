@@ -28,6 +28,7 @@ public class AStar : MonoBehaviour
     [SerializeField] Transform start;
     [SerializeField] Transform goal;
     [SerializeField] LayerMask obstacleLayer;
+    [SerializeField] float avoidance = 0.5f;
     public List<Node> pathNode = new List<Node>();
     public List<Vector3> path = new List<Vector3>();
     List<NodeData> openList = new List<NodeData>();
@@ -53,7 +54,7 @@ public class AStar : MonoBehaviour
         openList.Clear();
         pathNode.Clear();
         closeList.Clear();
-        if (!Physics.Linecast(start.position, goal.position, obstacleLayer))
+        if (!Physics.CheckCapsule(start.position, goal.position, avoidance, obstacleLayer))
         {
             path.Add(start.position);
             path.Add(goal.position);
@@ -81,12 +82,8 @@ public class AStar : MonoBehaviour
                 g = Vector3.Distance(_node, start.position);
                 h = Vector3.Distance(_node, goal.position);
                 if(_nodeData != null)
-                {
                     if(_nodeData.FCost <= g + h)
-                    {
                         continue;
-                    }
-                }
 
                 openList.Add(new NodeData(_node, g, h, _currentNode, _neighbor.Key));
             }
@@ -119,33 +116,47 @@ public class AStar : MonoBehaviour
             float hB = Vector3.Distance(_actual.edge.B, goal.position);
             if (gA + hA <= gB + hB)
             {
+                Vector3 _avoidance = _actual.edge.A + (_actual.edge.B - _actual.edge.A).normalized * avoidance;
                 bool _isSame = false;
                 for (int i = 0; i < _path.Count; i++)
                 {
-                    if (_path[i] == _actual.edge.A)
+                    if (_path[i] == _avoidance)
                         _isSame = true;
                 }
                 if(!_isSame)
-                    _path.Insert(0, _actual.edge.A);
+                {
+
+                    _path.Insert(0, _avoidance);
+                }
             }
             else
             {
+                Vector3 _avoidance = _actual.edge.B + (_actual.edge.A - _actual.edge.B).normalized * avoidance;
                 bool _isSame = false;
                 for (int i = 0; i < _path.Count; i++)
                 {
-                    if (_path[i] == _actual.edge.A)
+                    if (_path[i] == _avoidance)
                         _isSame = true;
                 }
                 if (!_isSame)
-                    _path.Insert(0, _actual.edge.B);
+                    _path.Insert(0, _avoidance);
             }
             _pathNode.Insert(0, _actual.currentNode);
         }
+        _path.Insert(0, start.position);
         _path.Add(goal.position);
-        for (int i = 0; i < _path.Count; i++)
+        for (int i = _path.Count - 1; i >= 2; i--)
         {
-            
+            if (!Physics.CheckCapsule(_path[i], _path[i - 2], avoidance, obstacleLayer))
+            {
+                _path.RemoveAt(i - 1);
+            }
         }
+        if (!Physics.CheckCapsule(_path[0], _path[2], avoidance, obstacleLayer))
+        {
+            _path.RemoveAt(1);
+        }
+        _path.RemoveAt(0);
         path = _path;
         pathNode = _pathNode;
         return _pathNode;

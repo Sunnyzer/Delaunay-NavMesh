@@ -22,9 +22,6 @@ public class AStarEditor : Editor
     }
     private void OnSceneGUI()
     {
-        eTarget.current = 0;
-        eTarget.ComputePath();
-
         Handles.color = Color.blue;
         if(eTarget.path.Count == 1)
         {
@@ -43,13 +40,5 @@ public class AStarEditor : Editor
             Handles.DrawWireCube(eTarget.pathNode[i + 1].position, Vector3.one * 0.25f);
             Handles.DrawLine(eTarget.pathNode[i].position + Vector3.up, eTarget.pathNode[i + 1].position + Vector3.up);
         }
-        //if (eTarget.current < eTarget.path.Count)
-        //{
-        //    eTarget.transform.position = Vector3.MoveTowards(eTarget.transform.position, eTarget.path[eTarget.current], Time.deltaTime);
-        //    if (Vector3.Distance(eTarget.transform.position, eTarget.path[eTarget.current]) < 0.05f)
-        //        ++eTarget.current;
-        //}
-        //if (eTarget.path.Count != 0)
-         //   eTarget.transform.position = Vector3.MoveTowards(eTarget.transform.position, eTarget.path[0], Time.deltaTime);
     }
 }
