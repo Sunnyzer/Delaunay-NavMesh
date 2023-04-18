@@ -29,6 +29,14 @@ public class NavMeshEditor : Editor
                 eTarget.Vertices[i] = Handles.DoPositionHandle(eTarget.Vertices[i], Quaternion.identity);
         }
         Collider[] _colliders = Physics.OverlapBox(eTarget.transform.position, eTarget.Extends / 2);
+        Handles.color = Color.red;
+        for (int i = 0; i < eTarget.Path.Count; i++)
+        {
+            foreach (var neighbor in eTarget.Path[i].neighborsIndex)
+            {
+                Handles.DrawLine(eTarget.Path[i].position, eTarget.Path[neighbor]);
+            }
+        }
         Handles.color = Color.black;
         if (eTarget.Triangles == null) return;
         for (int i = 0; i < eTarget.Triangles.Count && i < 10000; i++)
@@ -38,17 +46,9 @@ public class NavMeshEditor : Editor
             Vector3 _center = _t.GetCenterTriangle();
             float _ratio = 0.25f * i;
             _ratio = 0;
-            Handles.DrawLine(_t.A + Vector3.up * _ratio, _t.B + Vector3.up * _ratio, (float)(i * 0.15f));
-            Handles.DrawLine(_t.B + Vector3.up * _ratio, _t.C + Vector3.up * _ratio, (float)(i * 0.15f));
-            Handles.DrawLine(_t.C + Vector3.up * _ratio, _t.A + Vector3.up * _ratio, (float)(i * 0.15f));
-        }
-        Handles.color = Color.red;
-        for (int i = 0; i < eTarget.Path.Count; i++)
-        {
-            foreach (var neighbor in eTarget.Path[i].neighborsIndex)
-            {
-                Handles.DrawLine(eTarget.Path[i].position, eTarget.Path[neighbor]);
-            }
+            Handles.DrawLine(_t.A + Vector3.up * _ratio, _t.B + Vector3.up * _ratio, _ratio);
+            Handles.DrawLine(_t.B + Vector3.up * _ratio, _t.C + Vector3.up * _ratio, _ratio);
+            Handles.DrawLine(_t.C + Vector3.up * _ratio, _t.A + Vector3.up * _ratio, _ratio);
         }
     }
     public void GeneratePoint()
