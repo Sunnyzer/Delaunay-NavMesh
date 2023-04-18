@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 [Serializable]
@@ -25,14 +24,9 @@ public class DelaunayGroup : Geometry
         vertices = _vertices;
     }
 
-    public override Vector3 GetHighestPoint()
-    {
-        return vertices.OrderBy(v => v.z).Last();
-    }
-
     public override bool ContainsPoint(Vector3 _point)
     {
-        List<Vector3> _list = vertices.FindAll(a => Vector2.Distance(Delaunay.GetVector2(_point), Delaunay.GetVector2(a)) <= 0.0001f);
+        List<Vector3> _list = vertices.FindAll(v => Delaunay.GetVector2(_point) == Delaunay.GetVector2(v));
         if (_list.Count == 0)
             return false;
         return true;

@@ -8,7 +8,6 @@ public class Triangle : Geometry
     public Vector3 A;
     public Vector3 B;
     public Vector3 C;
-    [NonSerialized] public List<Triangle> neighbors = new List<Triangle>();
     public Triangle(Vector3 a, Vector3 b, Vector3 c)
     {
         A = a;
@@ -33,13 +32,13 @@ public class Triangle : Geometry
         _connect.Add(B);
         if (!pointConnections.ContainsKey(C))
             pointConnections.Add(C, new List<Vector3>(_connect));
-        _connect.Clear();
     }
 
     public override bool ContainsPoint(Vector3 _point)
     {
         Vector2 _point2D = Delaunay.GetVector2(_point);
-        return Vector2.Distance(_point2D, Delaunay.GetVector2(A)) < 0.00001f || Vector2.Distance(_point2D, Delaunay.GetVector2(B)) < 0.00001f || Vector2.Distance(_point2D, Delaunay.GetVector2(C)) < 0.00001f;
+        return _point2D == Delaunay.GetVector2(A) || _point2D == Delaunay.GetVector2(B) || _point2D == Delaunay.GetVector2(C);
+        //return Vector2.Distance(_point2D, Delaunay.GetVector2(A)) < 0.00001f || Vector2.Distance(_point2D, Delaunay.GetVector2(B)) < 0.00001f || Vector2.Distance(_point2D, Delaunay.GetVector2(C)) < 0.00001f;
     }
     public Vector3 GetCenterTriangle()
     {
@@ -64,16 +63,6 @@ public class Triangle : Geometry
             return true;
         return false;
     }
-    public override Vector3 GetHighestPoint()
-    {
-        if (A.z > B.z && A.z > C.z)
-            return A;
-        if (B.z > A.z && B.z > C.z)
-            return B;
-        if (C.z > A.z && C.z > B.z)
-            return C;
-        return A;
-    }
     public void DrawTriangle(Vector3 _offset, float _duration = 0, Color? _color = null)
     {
         Color color = Color.black;
@@ -94,8 +83,5 @@ public class Triangle : Geometry
             return true;
         return false;
     }
-    public static implicit operator bool(Triangle _t)
-    {
-        return _t != null;
-    }
+    public static implicit operator bool(Triangle _t) => _t != null;
 }

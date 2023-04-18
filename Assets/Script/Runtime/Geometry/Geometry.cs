@@ -22,6 +22,5 @@ public abstract class Geometry
         List<Vector3> _test = new List<Vector3>(vertices);
         return _test.OrderBy(v => v.z + v.x * 0.001f).First();
     }
-    public abstract Vector3 GetHighestPoint();
     public abstract bool ContainsPoint(Vector3 _point);
 }

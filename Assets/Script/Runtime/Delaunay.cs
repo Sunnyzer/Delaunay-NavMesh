@@ -13,10 +13,7 @@ public class Delaunay
     [SerializeField] int maxIte = 3;
     [SerializeField] int debugDuration = 0;
     int count = 0;
-    public static Vector2 GetVector2(Vector3 _point)
-    {
-        return new Vector2(_point.x, _point.z);
-    }
+    public static Vector2 GetVector2(Vector3 _point) => new Vector2(_point.x, _point.z);
 
     public Geometry ComputeDelaunay(List<Vector3> _vertices)
     {

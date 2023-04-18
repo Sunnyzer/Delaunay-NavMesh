@@ -1,4 +1,7 @@
+using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -22,28 +25,36 @@ public class NavMeshEditor : Editor
     private void OnSceneGUI()
     {
         Handles.color = Color.white;
-        for (int i = 0; i < eTarget.Vertices.Count && i < 10000; i++)
+        List<Vector3> _vertices = eTarget.Vertices;
+        int _count = _vertices.Count;
+        int i = 0;
+        for (; i < _count; i++)
         {
-            Handles.Label(eTarget.Vertices[i] + Vector3.up * 0.5f, i.ToString().ToUpper());
-            if (Vector3.Distance(eTarget.Vertices[i], Camera.current.transform.position) < 5)
-                eTarget.Vertices[i] = Handles.DoPositionHandle(eTarget.Vertices[i], Quaternion.identity);
+            Vector3 _v = _vertices[i];
+            Handles.Label(_v + Vector3.up * 0.5f, i.ToString().ToUpper());
+            if (Vector3.Distance(_v, Camera.current.transform.position) < 5)
+                eTarget.Vertices[i] = Handles.DoPositionHandle(_v, Quaternion.identity);
         }
+        i = 0;
         Collider[] _colliders = Physics.OverlapBox(eTarget.transform.position, eTarget.Extends / 2);
         Handles.color = Color.red;
-        for (int i = 0; i < eTarget.Path.Count; i++)
+        List<Node> _nodes = eTarget.Path;
+        _count = _nodes.Count;
+        for (; i < _count; i++)
         {
-            foreach (var neighbor in eTarget.Path[i].neighborsIndex)
-            {
-                Handles.DrawLine(eTarget.Path[i].position, eTarget.Path[neighbor]);
-            }
+            Node _node = _nodes[i];
+            foreach (var neighbor in _node.neighborsIndex)
+                Handles.DrawLine(_node.position, _nodes[neighbor]);
         }
+        List<Triangle> _triangles = eTarget.Triangles; 
+        if (_triangles == null) return;
+        _count = _triangles.Count;
         Handles.color = Color.black;
-        if (eTarget.Triangles == null) return;
-        for (int i = 0; i < eTarget.Triangles.Count && i < 10000; i++)
+        i = 0;
+        for (; i < _count; i++)
         {
-            Triangle _t = eTarget.Triangles[i];
+            Triangle _t = _triangles[i];
             if (_t == null) continue;
-            Vector3 _center = _t.GetCenterTriangle();
             float _ratio = 0.25f * i;
             _ratio = 0;
             Handles.DrawLine(_t.A + Vector3.up * _ratio, _t.B + Vector3.up * _ratio, _ratio);
@@ -54,12 +65,13 @@ public class NavMeshEditor : Editor
     public void GeneratePoint()
     {
         eTarget.Vertices.Clear();
-        Vector3 _extends = eTarget.Extends / 2; 
-        AddPoint(eTarget.transform.position + _extends);
-        AddPoint(eTarget.transform.position - _extends);
-        AddPoint(eTarget.transform.position - new Vector3(_extends.x, 0, -_extends.z));
-        AddPoint(eTarget.transform.position - new Vector3(-_extends.x, 0, _extends.z));
-        Collider[] _colliders = Physics.OverlapBox(eTarget.transform.position, _extends);
+        Vector3 _extends = eTarget.Extends / 2;
+        Vector3 _position = eTarget.transform.position;
+        AddPoint(_position + _extends);
+        AddPoint(_position - _extends);
+        AddPoint(_position - new Vector3(_extends.x, 0, -_extends.z));
+        AddPoint(_position - new Vector3(-_extends.x, 0, _extends.z));
+        Collider[] _colliders = Physics.OverlapBox(_position, _extends);
         for (int i = 0; i < _colliders.Length; i++)
         {
             Handles.color = Color.white;
@@ -88,7 +100,6 @@ public class NavMeshEditor : Editor
                 _boundMExtends - _offset,
                 _boundPExtends + _offset,
             };
-            LayerMask _layer = eTarget.Layer;
             for (int j = 0; j < _allPoint.Length; ++j)
             {
                 Vector3 _point = _allPoint[j];
@@ -98,7 +109,7 @@ public class NavMeshEditor : Editor
     }
     public void AddPoint(Vector3 _point)
     {
-        bool _hit = Physics.Raycast(_point + Vector3.up * 10000, Vector3.down, out RaycastHit _rayHit, Mathf.Infinity, eTarget.Layer);
+        bool _hit = Physics.Raycast(_point + Vector3.up * 10000, Vector3.down, out RaycastHit _rayHit, Mathf.Infinity, eTarget.ObstacleLayer);
         if (_hit)
         {
             Vector3 _position = new Vector3((float)Math.Round(_rayHit.point.x, 2), (float)Math.Round(_rayHit.point.y, 2), (float)Math.Round(_rayHit.point.z, 2));

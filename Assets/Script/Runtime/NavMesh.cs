@@ -21,31 +21,27 @@ public class Node
 
 public class NavMesh : Singleton<NavMesh>
 {
-    [SerializeField] Delaunay delaunay = new Delaunay();
     [SerializeField] List<Vector3> vertices = new List<Vector3>();
     [SerializeField] Vector3 extends = Vector3.one;
-    [SerializeField] bool navMeshVolumeDebug = true;
-    [SerializeField] LayerMask layerNav;
-    //[SerializeField] List<Node> path = new List<Node>();
+    [SerializeField] LayerMask obtacleLayer;
     [SerializeField] NavMeshData navMeshData;
+    [SerializeField] bool navMeshVolumeDebug = true;
 
     public List<Vector3> Vertices => vertices;
     public List<Triangle> Triangles => navMeshData.triangles;
     public Vector3 Extends => extends;
-    public LayerMask Layer => layerNav;
+    public LayerMask ObstacleLayer => obtacleLayer;
     public List<Node> Path => navMeshData.nodes;
 
-    private void FixedUpdate()
-    {
-        
-    }
     public void Compute()
     {
-        Geometry _geometry = delaunay.ComputeDelaunay(vertices);
+        Geometry _geometry = new Delaunay().ComputeDelaunay(vertices);
         List<Triangle> _triangles = _geometry.Triangles;
         List<Node> _path = new List<Node>();
         vertices = _geometry.Vertices;
-        for (int i = 0; i < _triangles.Count; )
+        int _count = _triangles.Count;
+        int i = 0;
+        for (; i < _count; )
         {
             Triangle _t = _triangles[i];
             bool _hitAB = Physics.Linecast(_t.A, _t.B);
@@ -54,18 +50,20 @@ public class NavMesh : Singleton<NavMesh>
             if (_hitAB || _hitBC || _hitCA)
             {
                 _triangles.Remove(_t);
+                _count--;
                 continue;
             }
             i++;
         }
         navMeshData.nodes.Clear();
         navMeshData.triangles.Clear();
-        for (int i = 0; i < _triangles.Count; i++)
+        i = 0;
+        for (; i < _count; i++)
         {
             Triangle _t = _triangles[i];
             Node _node = new Node((_t.A + _t.B + _t.C) / 3);
             _path.Add(_node);
-            for (int j = 0; j < _triangles.Count; j++)
+            for (int j = 0; j < _count; j++)
             {
                 Triangle _neighbor = _triangles[j];
                 bool _a = _t.ContainsPoint(_neighbor.A);
