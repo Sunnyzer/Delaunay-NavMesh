@@ -83,7 +83,7 @@ public class AStar : MonoBehaviour
                 h = Vector3.Distance(_node, goal.position);
                 if(_nodeData != null)
                     if(_nodeData.FCost <= g + h)
-                        continue;
+                        _nodeData.previousNode = _currentNode;
 
                 openList.Add(new NodeData(_node, g, h, _currentNode, _neighbor.Key));
             }
@@ -145,12 +145,14 @@ public class AStar : MonoBehaviour
         }
         _path.Insert(0, start.position);
         _path.Add(goal.position);
-        for (int i = _path.Count - 1; i >= 2; i--)
+        for (int i = 0; i < _path.Count - 2; )
         {
-            if (!Physics.CheckCapsule(_path[i], _path[i - 2], avoidance, obstacleLayer))
+            if (!Physics.CheckCapsule(_path[i], _path[i + 2], avoidance, obstacleLayer))
             {
-                _path.RemoveAt(i - 1);
+                _path.RemoveAt(i + 1);
+                continue;
             }
+            i++;
         }
         if (!Physics.CheckCapsule(_path[0], _path[2], avoidance, obstacleLayer))
         {
