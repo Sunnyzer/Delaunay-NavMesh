@@ -36,9 +36,9 @@ public class AStar : MonoBehaviour
     public int current = 0;
     public Node ClosestNode(Vector3 _start)
     {
-        DrawDelaunay _drawDelaunay = DrawDelaunay.Instance;
+        NavMesh _drawDelaunay = NavMesh.Instance;
         if (!_drawDelaunay)
-            _drawDelaunay = FindObjectOfType<DrawDelaunay>();
+            _drawDelaunay = FindObjectOfType<NavMesh>();
         if (_drawDelaunay.Path.Count == 0) return null;
         int i = 0;
         for (; i < _drawDelaunay.Triangles.Count; i++)
@@ -67,15 +67,19 @@ public class AStar : MonoBehaviour
         if (_start == null || _goal == null) return new List<Node>();
 
         NodeData _currentNode = new NodeData(_start, 0, Vector3.Distance(_start, _goal), null, null);
-        List<Node> navMeshNode = FindObjectOfType<DrawDelaunay>().Path;
+        List<Node> navMeshNode = FindObjectOfType<NavMesh>().Path;
         int max = 0;
         while (_currentNode.currentNode != _goal && max < 500)
         {
-            if (_currentNode.currentNode.neighbors == null) break; 
-            foreach (var _neighbor in _currentNode.currentNode.neighbors)
+            int j = 0;
+            foreach (var _neighbor in _currentNode.currentNode.neighborsIndex)
             {
-                Node _node = navMeshNode[_neighbor.Value];
-                if (closeList.Contains(_node)) continue;
+                Node _node = navMeshNode[_neighbor];
+                if (closeList.Contains(_node))
+                {
+                    j++;
+                    continue;
+                }
                 float g = 0;
                 float h= 0;
                 NodeData _nodeData = openList.Find(n => n.currentNode == _node);
@@ -84,8 +88,8 @@ public class AStar : MonoBehaviour
                 if(_nodeData != null)
                     if(_nodeData.FCost <= g + h)
                         _nodeData.previousNode = _currentNode;
-
-                openList.Add(new NodeData(_node, g, h, _currentNode, _neighbor.Key));
+                openList.Add(new NodeData(_node, g, h, _currentNode, _currentNode.currentNode.neighborsEdge[j]));
+                j++;
             }
             float fCost = float.MaxValue;
             NodeData _nextNode = null;

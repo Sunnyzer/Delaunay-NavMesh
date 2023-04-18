@@ -17,7 +17,6 @@ public class AStarEditor : Editor
         if (GUILayout.Button("Generate Path"))
         {
             eTarget.ComputePath();
-            //eTarget.current = 0;
         }
     }
     private void OnSceneGUI()

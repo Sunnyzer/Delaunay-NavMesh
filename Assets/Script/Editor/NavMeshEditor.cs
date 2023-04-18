@@ -2,13 +2,13 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(DrawDelaunay))]
-public class DrawDelaunayEditor : Editor
+[CustomEditor(typeof(NavMesh))]
+public class NavMeshEditor : Editor
 {
-    DrawDelaunay eTarget;
+    NavMesh eTarget;
     private void OnEnable()
     {
-        eTarget = (DrawDelaunay)target;
+        eTarget = (NavMesh)target;
     }
     public override void OnInspectorGUI()
     {
@@ -21,7 +21,6 @@ public class DrawDelaunayEditor : Editor
     }
     private void OnSceneGUI()
     {
-        
         Handles.color = Color.white;
         for (int i = 0; i < eTarget.Vertices.Count && i < 10000; i++)
         {
@@ -46,8 +45,7 @@ public class DrawDelaunayEditor : Editor
         Handles.color = Color.red;
         for (int i = 0; i < eTarget.Path.Count; i++)
         {
-            if (eTarget.Path[i].neighbors == null) continue;
-            foreach (var neighbor in eTarget.Path[i].neighbors.Values)
+            foreach (var neighbor in eTarget.Path[i].neighborsIndex)
             {
                 Handles.DrawLine(eTarget.Path[i].position, eTarget.Path[neighbor]);
             }
