@@ -782,7 +782,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 356802849}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 9.82, y: -0.03, z: 4.66}
+  m_LocalPosition: {x: 10.54, y: -0.03, z: 8.18}
   m_LocalScale: {x: 0.75, y: 0.75, z: 0.75}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1561,6 +1561,7 @@ GameObject:
   - component: {fileID: 1438737242}
   - component: {fileID: 1438737241}
   - component: {fileID: 1438737244}
+  - component: {fileID: 1438737245}
   m_Layer: 0
   m_Name: Sphere
   m_TagString: Untagged
@@ -1626,7 +1627,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1438737239}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.64, y: 0, z: -11.66}
+  m_LocalPosition: {x: -11.04, y: 0, z: -7.82}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1652,35 +1653,86 @@ MonoBehaviour:
     m_Bits: 64
   avoidance: 0.25
   pathNode:
-  - position: {x: 1.6266667, y: 0, z: -10.253334}
+  - position: {x: -10.826667, y: 0, z: -7.736667}
     neighborsEdge:
-    - A: {x: -0.74, y: 0, z: -5.93}
-      B: {x: 1.14, y: 0, z: -13.77}
-    - A: {x: 4.48, y: 0, z: -11.06}
-      B: {x: 1.14, y: 0, z: -13.77}
-    - A: {x: 1.14, y: 0, z: -13.77}
-      B: {x: 4.48, y: 0, z: -11.06}
-    - A: {x: -0.74, y: 0, z: -5.93}
-      B: {x: 4.48, y: 0, z: -11.06}
-    neighborsIndex: 190000001b0000001c0000001d000000
-  - position: {x: 2.74, y: 0, z: -6.603333}
+    - A: {x: -10.27, y: 0, z: -11.76}
+      B: {x: -13.25, y: 0, z: -5.52}
+    - A: {x: -13.25, y: 0, z: -5.52}
+      B: {x: -10.27, y: 0, z: -11.76}
+    - A: {x: -13.25, y: 0, z: -5.52}
+      B: {x: -8.96, y: 0, z: -5.93}
+    - A: {x: -10.27, y: 0, z: -11.76}
+      B: {x: -8.96, y: 0, z: -5.93}
+    neighborsIndex: 04000000050000000600000011000000
+  - position: {x: -10.389999, y: 0, z: -4.8266664}
     neighborsEdge:
-    - A: {x: 4.48, y: 0, z: -11.06}
-      B: {x: -0.74, y: 0, z: -5.93}
-    - A: {x: -0.74, y: 0, z: -5.93}
-      B: {x: 4.48, y: 0, z: -11.06}
-    - A: {x: -0.74, y: 0, z: -5.93}
-      B: {x: 4.48, y: 0, z: -2.82}
-    neighborsIndex: 1c0000001d0000001e000000
-  - position: {x: 1, y: 0, z: -3.9266665}
+    - A: {x: -13.25, y: 0, z: -5.52}
+      B: {x: -8.96, y: 0, z: -5.93}
+    - A: {x: -13.25, y: 0, z: -5.52}
+      B: {x: -8.96, y: 0, z: -5.93}
+    - A: {x: -13.25, y: 0, z: -5.52}
+      B: {x: -8.96, y: 0, z: -3.03}
+    neighborsIndex: 050000000600000007000000
+  - position: {x: -10.776666, y: 0, z: -2.8533335}
     neighborsEdge:
-    - A: {x: -0.74, y: 0, z: -5.93}
-      B: {x: 4.48, y: 0, z: -2.82}
-    - A: {x: -0.74, y: 0, z: -5.93}
-      B: {x: 4.48, y: 0, z: -2.82}
+    - A: {x: -13.25, y: 0, z: -5.52}
+      B: {x: -8.96, y: 0, z: -3.03}
+    - A: {x: -13.25, y: 0, z: -5.52}
+      B: {x: -8.96, y: 0, z: -3.03}
+    - A: {x: -13.25, y: 0, z: -5.52}
+      B: {x: -10.12, y: 0, z: -0.01}
+    - A: {x: -8.96, y: 0, z: -3.03}
+      B: {x: -10.12, y: 0, z: -0.01}
+    neighborsIndex: 06000000070000000800000012000000
+  - position: {x: -8.833333, y: 0, z: -1.0166667}
+    neighborsEdge:
+    - A: {x: -8.96, y: 0, z: -3.03}
+      B: {x: -10.12, y: 0, z: -0.01}
+    - A: {x: -8.96, y: 0, z: -3.03}
+      B: {x: -7.42, y: 0, z: -0.01}
+    - A: {x: -8.96, y: 0, z: -3.03}
+      B: {x: -7.42, y: 0, z: -0.01}
+    neighborsIndex: 07000000120000003a000000
+  - position: {x: -5.7066665, y: 0, z: -2.0233333}
+    neighborsEdge:
+    - A: {x: -8.96, y: 0, z: -3.03}
+      B: {x: -7.42, y: 0, z: -0.01}
+    - A: {x: -8.96, y: 0, z: -3.03}
+      B: {x: -0.74, y: 0, z: -3.03}
+    - A: {x: -7.42, y: 0, z: -0.01}
+      B: {x: -0.74, y: 0, z: -3.03}
+    neighborsIndex: 120000003a0000003b000000
+  - position: {x: -3.9866667, y: 0, z: 0.23666668}
+    neighborsEdge:
+    - A: {x: -7.42, y: 0, z: -0.01}
+      B: {x: -3.8, y: -0, z: 3.75}
     - A: {x: -0.74, y: 0, z: -3.03}
-      B: {x: 4.48, y: 0, z: -2.82}
-    neighborsIndex: 1d0000001e0000001f000000
+      B: {x: -7.42, y: 0, z: -0.01}
+    - A: {x: -7.42, y: 0, z: -0.01}
+      B: {x: -0.74, y: 0, z: -3.03}
+    - A: {x: -3.8, y: -0, z: 3.75}
+      B: {x: -0.74, y: 0, z: -3.03}
+    neighborsIndex: 0d0000003a0000003b0000003c000000
+  - position: {x: -2.2733333, y: 0, z: 1.4900001}
+    neighborsEdge:
+    - A: {x: -0.74, y: 0, z: -3.03}
+      B: {x: -3.8, y: -0, z: 3.75}
+    - A: {x: -3.8, y: -0, z: 3.75}
+      B: {x: -0.74, y: 0, z: -3.03}
+    - A: {x: -2.28, y: -0, z: 3.75}
+      B: {x: -0.74, y: 0, z: -3.03}
+    neighborsIndex: 3b0000003c0000003d000000
+  - position: {x: -0.27666664, y: 0, z: 1.6466665}
+    neighborsEdge:
+    - A: {x: -0.74, y: 0, z: -3.03}
+      B: {x: 2.19, y: -0, z: 4.22}
+    - A: {x: -0.74, y: 0, z: -3.03}
+      B: {x: -2.28, y: -0, z: 3.75}
+    - A: {x: -2.28, y: -0, z: 3.75}
+      B: {x: -0.74, y: 0, z: -3.03}
+    - A: {x: -2.28, y: -0, z: 3.75}
+      B: {x: 2.19, y: -0, z: 4.22}
+    neighborsIndex: 1f0000003c0000003d0000003e000000
   - position: {x: 1.9766668, y: 0, z: -0.54333335}
     neighborsEdge:
     - A: {x: 2.19, y: -0, z: 4.22}
@@ -1771,10 +1823,26 @@ MonoBehaviour:
       B: {x: 17.5, y: -0, z: 17.5}
     neighborsIndex: 290000002a0000002b000000
   path:
-  - {x: 4.5930276, y: 0, z: -2.5970097}
-  - {x: 9.076982, y: 0, z: 3.2153497}
-  - {x: 9.82, y: -0.03, z: 4.66}
+  - {x: -8.84643, y: 0, z: -2.807285}
+  - {x: 9.045879, y: 0, z: 2.7691169}
+  - {x: 10.54, y: -0.03, z: 8.18}
   current: 0
+--- !u!114 &1438737245
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1438737239}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a92c6b5c460653d45a05ff9d4ba4b913, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  astar: {fileID: 1438737244}
+  path: []
+  goal: {fileID: 356802852}
+  moveSpeed: 4
 --- !u!1 &2009059485
 GameObject:
   m_ObjectHideFlags: 0

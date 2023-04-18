@@ -48,23 +48,24 @@ public class AStar : MonoBehaviour
             return null;
         return _drawDelaunay.Path[i];
     }
-    public List<Node> ComputePath()
+    public List<Vector3> ComputePath(Transform _goalT)
     {
+        if(_goalT)
+            goal = _goalT;
         path.Clear();
         openList.Clear();
         pathNode.Clear();
         closeList.Clear();
         if (!Physics.CheckCapsule(start.position, goal.position, avoidance, obstacleLayer))
         {
-            path.Add(start.position);
             path.Add(goal.position);
-            return new List<Node>();
+            return path;
         }
         List<Node> _pathNode = new List<Node>(); 
         Node _start = ClosestNode(start.position);
         Node _goal = ClosestNode(goal.position);
 
-        if (_start == null || _goal == null) return new List<Node>();
+        if (_start == null || _goal == null) return path;
 
         NodeData _currentNode = new NodeData(_start, 0, Vector3.Distance(_start, _goal), null, null);
         List<Node> navMeshNode = FindObjectOfType<NavMesh>().Path;
@@ -158,13 +159,13 @@ public class AStar : MonoBehaviour
             }
             i++;
         }
-        if (!Physics.CheckCapsule(_path[0], _path[2], avoidance, obstacleLayer))
+        if (_path.Count > 2 && !Physics.CheckCapsule(_path[0], _path[2], avoidance, obstacleLayer))
         {
             _path.RemoveAt(1);
         }
         _path.RemoveAt(0);
         path = _path;
         pathNode = _pathNode;
-        return _pathNode;
+        return path;
     }
 }
