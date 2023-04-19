@@ -7,18 +7,14 @@ public class EnemyMovement : MonoBehaviour
     [SerializeField] List<Vector3> path;
     [SerializeField] Transform goal;
     [SerializeField] float moveSpeed = 1;
-    int i = 0;
     private void Update()
     {
         path = astar.ComputePath(goal);
         if(path.Count > 0)
         {
             transform.position = Vector3.MoveTowards(transform.position, path[0], Time.deltaTime * moveSpeed);
-            if (Vector3.Distance(transform.position, path[0]) < 0.01f)
-                i++;
             return;
         }
-        //transform.position = Vector3.MoveTowards(transform.position, goal.position, Time.deltaTime * moveSpeed);
     }
     private void OnDrawGizmos()
     {

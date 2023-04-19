@@ -36,7 +36,6 @@ public class NavMeshEditor : Editor
                 eTarget.Vertices[i] = Handles.DoPositionHandle(_v, Quaternion.identity);
         }
         i = 0;
-        Collider[] _colliders = Physics.OverlapBox(eTarget.transform.position, eTarget.Extends / 2);
         Handles.color = Color.red;
         List<Node> _nodes = eTarget.Path;
         _count = _nodes.Count;
@@ -71,7 +70,7 @@ public class NavMeshEditor : Editor
         AddPoint(_position - _extends);
         AddPoint(_position - new Vector3(_extends.x, 0, -_extends.z));
         AddPoint(_position - new Vector3(-_extends.x, 0, _extends.z));
-        Collider[] _colliders = Physics.OverlapBox(_position, _extends);
+        Collider[] _colliders = Physics.OverlapBox(_position, _extends, eTarget.transform.rotation, eTarget.ObstacleLayer);
         for (int i = 0; i < _colliders.Length; i++)
         {
             Handles.color = Color.white;

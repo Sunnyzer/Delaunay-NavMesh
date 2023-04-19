@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -29,6 +30,7 @@ public class AStar : MonoBehaviour
     [SerializeField] Transform goal;
     [SerializeField] LayerMask obstacleLayer;
     [SerializeField] float avoidance = 0.5f;
+    Node previousStart = null;
     public List<Node> pathNode = new List<Node>();
     public List<Vector3> path = new List<Vector3>();
     List<NodeData> openList = new List<NodeData>();
@@ -45,7 +47,9 @@ public class AStar : MonoBehaviour
             if (_drawDelaunay.Triangles[i].IsPointInTriangle(_start))
                 break;
         if(i >= _drawDelaunay.Path.Count)
-            return null;
+        {
+            return _drawDelaunay.Path.OrderBy(t => Vector3.Distance(t.position, _start)).First();
+        }
         return _drawDelaunay.Path[i];
     }
     public List<Vector3> ComputePath(Transform _goalT)
@@ -61,12 +65,17 @@ public class AStar : MonoBehaviour
             path.Add(goal.position);
             return path;
         }
-        List<Node> _pathNode = new List<Node>(); 
+        List<Node> _pathNode = new List<Node>();
         Node _start = ClosestNode(start.position);
         Node _goal = ClosestNode(goal.position);
 
-        if (_start == null || _goal == null) return path;
-
+        if (_start == null)
+            _start = previousStart;
+        if (_goal == null)
+        {
+            return path;
+        }
+        previousStart = _start;
         NodeData _currentNode = new NodeData(_start, 0, Vector3.Distance(_start, _goal), null, null);
         List<Node> navMeshNode = FindObjectOfType<NavMesh>().Path;
         int max = 0;
