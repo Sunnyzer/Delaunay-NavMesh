@@ -40,6 +40,9 @@ public class NavMesh : Singleton<NavMesh>
     [SerializeField] NavMeshDebug navMeshDebug;
     [SerializeField] NavMeshSettings navMeshSettings;
 
+    public NavMeshDebug NavMeshDebug => navMeshDebug;
+    public NavMeshSettings NavMeshSettings => navMeshSettings;
+
     public List<Vector3> Vertices => vertices;
     public List<Triangle> Triangles => navMeshData.triangles;
     public List<Node> Nodes => navMeshData.nodes;

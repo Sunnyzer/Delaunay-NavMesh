@@ -7804,8 +7804,8 @@ MonoBehaviour:
   navMeshData: {fileID: 11400000, guid: e1617fe4680c2a64c801e4fff8767513, type: 2}
   navMeshDebug:
     displayNavMeshVolume: 0
-    voronoiColor: {r: 1, g: 0, b: 0, a: 0}
-    triangleColor: {r: 0, g: 0, b: 0, a: 0}
+    voronoiColor: {r: 1, g: 0, b: 0, a: 1}
+    triangleColor: {r: 0, g: 0, b: 0, a: 1}
   navMeshSettings:
     extendsVolume: {x: 50, y: 10, z: 50}
     navMeshLayer:

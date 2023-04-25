@@ -24,17 +24,18 @@ public class NavMeshEditor : Editor
     public void DisplayVertices(List<Vector3> _vertices)
     {
         int _count = _vertices.Count;
+        Vector3 _cameraPos = Camera.current.transform.position;
         for (int i = 0; i < _count; i++)
         {
             Vector3 _v = _vertices[i];
             Handles.Label(_v + Vector3.up * 0.5f, i.ToString().ToUpper());
-            if (Vector3.Distance(_v, Camera.current.transform.position) < 5)
+            if (Vector3.Distance(_v, _cameraPos) < 5)
                 eTarget.Vertices[i] = Handles.DoPositionHandle(_v, Quaternion.identity);
         }
     }
     public void DisplayVoronoi(List<Node> _nodes)
     {
-        Handles.color = Color.red;
+        Handles.color = eTarget.NavMeshDebug.voronoiColor;
         int _count = _nodes.Count;
         for (int i = 0; i < _count; i++)
         {
@@ -46,7 +47,7 @@ public class NavMeshEditor : Editor
     }
     public void DisplayTriangle(List<Triangle> _triangles)
     {
-        Handles.color = Color.black;
+        Handles.color = eTarget.NavMeshDebug.triangleColor;
         int _count = _triangles.Count;
         for (int i = 0; i < _count; i++)
         {
