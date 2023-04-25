@@ -1,9 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class NodeData
@@ -41,16 +36,16 @@ public class AStar : MonoBehaviour
         NavMesh _drawDelaunay = NavMesh.Instance;
         if (!_drawDelaunay)
             _drawDelaunay = FindObjectOfType<NavMesh>();
-        if (_drawDelaunay.Path.Count == 0) return null;
+        if (_drawDelaunay.Nodes.Count == 0) return null;
         int i = 0;
         for (; i < _drawDelaunay.Triangles.Count; i++)
             if (_drawDelaunay.Triangles[i].IsPointInTriangle(_start))
                 break;
-        if(i >= _drawDelaunay.Path.Count)
+        if(i >= _drawDelaunay.Nodes.Count)
         {
-            return _drawDelaunay.Path.OrderBy(t => Vector3.Distance(t.position, _start)).First();
+            return null;// _drawDelaunay.Path.OrderBy(t => Vector3.Distance(t.position, _start)).First();
         }
-        return _drawDelaunay.Path[i];
+        return _drawDelaunay.Nodes[i];
     }
     public List<Vector3> ComputePath(Transform _goalT)
     {
@@ -60,7 +55,7 @@ public class AStar : MonoBehaviour
         openList.Clear();
         pathNode.Clear();
         closeList.Clear();
-        if (!Physics.CheckCapsule(start.position, goal.position, avoidance, obstacleLayer))
+        if (!Physics.CheckCapsule(start.position, goal.position, avoidance + 0.01f, obstacleLayer))
         {
             path.Add(goal.position);
             return path;
@@ -70,14 +65,21 @@ public class AStar : MonoBehaviour
         Node _goal = ClosestNode(goal.position);
 
         if (_start == null)
+        {
             _start = previousStart;
+            if (_start == null)
+                Debug.Log("node start null");
+            else
+                Debug.Log("node start null but previous correct");
+        }
         if (_goal == null)
         {
+            Debug.Log("node goal null");
             return path;
         }
         previousStart = _start;
         NodeData _currentNode = new NodeData(_start, 0, Vector3.Distance(_start, _goal), null, null);
-        List<Node> navMeshNode = FindObjectOfType<NavMesh>().Path;
+        List<Node> navMeshNode = FindObjectOfType<NavMesh>().Nodes;
         int max = 0;
         while (_currentNode.currentNode != _goal && max < 500)
         {
@@ -93,7 +95,7 @@ public class AStar : MonoBehaviour
                 float g = 0;
                 float h= 0;
                 NodeData _nodeData = openList.Find(n => n.currentNode == _node);
-                g = Vector3.Distance(_node, start.position);
+                //g = Vector3.Distance(_node, start.position);
                 h = Vector3.Distance(_node, goal.position);
                 if(_nodeData != null)
                     if(_nodeData.FCost <= g + h)
@@ -130,7 +132,7 @@ public class AStar : MonoBehaviour
             float hB = Vector3.Distance(_actual.edge.B, goal.position);
             if (gA + hA <= gB + hB)
             {
-                Vector3 _avoidance = _actual.edge.A + (_actual.edge.B - _actual.edge.A).normalized * avoidance;
+                Vector3 _avoidance = _actual.edge.A + (_actual.edge.B - _actual.edge.A).normalized * (avoidance + 0.01f);
                 bool _isSame = false;
                 for (int i = 0; i < _path.Count; i++)
                 {
@@ -145,7 +147,7 @@ public class AStar : MonoBehaviour
             }
             else
             {
-                Vector3 _avoidance = _actual.edge.B + (_actual.edge.A - _actual.edge.B).normalized * avoidance;
+                Vector3 _avoidance = _actual.edge.B + (_actual.edge.A - _actual.edge.B).normalized * (avoidance + 0.01f);
                 bool _isSame = false;
                 for (int i = 0; i < _path.Count; i++)
                 {
@@ -161,14 +163,14 @@ public class AStar : MonoBehaviour
         _path.Add(goal.position);
         for (int i = 0; i < _path.Count - 2; )
         {
-            if (!Physics.CheckCapsule(_path[i], _path[i + 2], avoidance, obstacleLayer))
+            if (!Physics.CheckCapsule(_path[i], _path[i + 2], (avoidance + 0.01f), obstacleLayer))
             {
                 _path.RemoveAt(i + 1);
                 continue;
             }
             i++;
         }
-        if (_path.Count > 2 && !Physics.CheckCapsule(_path[0], _path[2], avoidance, obstacleLayer))
+        if (_path.Count > 2 && !Physics.CheckCapsule(_path[0], _path[2], (avoidance + 0.01f), obstacleLayer))
         {
             _path.RemoveAt(1);
         }

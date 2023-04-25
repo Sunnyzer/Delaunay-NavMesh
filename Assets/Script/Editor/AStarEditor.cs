@@ -14,7 +14,7 @@ public class AStarEditor : Editor
     {
         base.OnInspectorGUI();
         
-        if (GUILayout.Button("Generate Path"))
+        if (GUILayout.Button("Generate Nodes"))
         {
             eTarget.ComputePath(null);
         }

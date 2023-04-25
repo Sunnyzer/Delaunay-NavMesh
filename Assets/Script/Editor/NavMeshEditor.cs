@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -12,14 +11,14 @@ public class NavMeshEditor : Editor
     {
         base.OnInspectorGUI();
         if (GUILayout.Button("Generate NavMesh"))
-            eTarget.Compute();
+            eTarget.CreateNavMesh();
         if (GUILayout.Button("Generate Point"))
             eTarget.GeneratePoint();
     }
     private void OnSceneGUI()
     {
         DisplayVertices(eTarget.Vertices);
-        DisplayVoronoi(eTarget.Path);
+        DisplayVoronoi(eTarget.Nodes);
         DisplayTriangle(eTarget.Triangles);
     }
     public void DisplayVertices(List<Vector3> _vertices)

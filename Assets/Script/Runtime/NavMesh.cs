@@ -13,57 +13,60 @@ public class Node
     {
         position = _center;
     }
-    public static implicit operator Vector3(Node _node)
-    {
-        return _node.position;
-    }
+    public static implicit operator Vector3(Node _node) => _node.position;
+}
+
+[Serializable]
+public struct NavMeshDebug
+{
+    [SerializeField] public bool displayNavMeshVolume;
+    [SerializeField] public Color voronoiColor;
+    [SerializeField] public Color triangleColor;
+}
+
+[Serializable]
+public struct NavMeshSettings
+{
+    [SerializeField] public Vector3 extendsVolume;
+    [SerializeField] public LayerMask navMeshLayer;
+    [SerializeField] public LayerMask pointLayer;
+    [SerializeField] public LayerMask volumeLayer;
 }
 
 public class NavMesh : Singleton<NavMesh>
 {
-    [SerializeField] List<Vector3> vertices = new List<Vector3>();
-    [SerializeField] Vector3 extends = Vector3.one;
-    [SerializeField] LayerMask obtacleLayer;
+    List<Vector3> vertices = new List<Vector3>();
     [SerializeField] NavMeshData navMeshData;
-    [SerializeField] bool navMeshVolumeDebug = true;
+    [SerializeField] NavMeshDebug navMeshDebug;
+    [SerializeField] NavMeshSettings navMeshSettings;
 
     public List<Vector3> Vertices => vertices;
     public List<Triangle> Triangles => navMeshData.triangles;
-    public Vector3 Extends => extends;
-    public LayerMask ObstacleLayer => obtacleLayer;
-    public List<Node> Path => navMeshData.nodes;
+    public List<Node> Nodes => navMeshData.nodes;
 
-    public void Compute()
+    public void CreateNavMesh()
     {
         Geometry _geometry = new Delaunay().ComputeDelaunay(vertices);
-        List<Triangle> _triangles = _geometry.Triangles;
-        List<Node> _path = new List<Node>();
-        vertices = _geometry.Vertices;
-        int _count = _triangles.Count;
-        int i = 0;
-        for (; i < _count; )
-        {
-            Triangle _t = _triangles[i];
-            bool _hitAB = Physics.Linecast(_t.A, _t.B);
-            bool _hitBC = Physics.Linecast(_t.B, _t.C);
-            bool _hitCA = Physics.Linecast(_t.C, _t.A);
-            if (_hitAB || _hitBC || _hitCA)
-            {
-                _triangles.Remove(_t);
-                _count--;
-                continue;
-            }
-            i++;
-        }
-        navMeshData.nodes.Clear();
         navMeshData.triangles.Clear();
-        i = 0;
-        for (; i < _count; i++)
+        navMeshData.triangles = _geometry.Triangles;
+        vertices = _geometry.Vertices;
+        navMeshData.nodes.Clear();
+        navMeshData.triangles = RemoveWrongTriangles(navMeshData.triangles);
+        navMeshData.nodes = CreateNode(navMeshData.triangles);
+        #if UNITY_EDITOR
+        EditorUtility.SetDirty(navMeshData);
+        #endif
+    }
+    public List<Node> CreateNode(List<Triangle> _triangles)
+    {
+        List<Node> _nodes = new List<Node>();
+        int _count = _triangles.Count;
+        for (int i = 0; i < _count; ++i)
         {
             Triangle _t = _triangles[i];
             Node _node = new Node((_t.A + _t.B + _t.C) / 3);
-            _path.Add(_node);
-            for (int j = 0; j < _count; j++)
+            _nodes.Add(_node);
+            for (int j = 0; j < _count; ++j)
             {
                 Triangle _neighbor = _triangles[j];
                 bool _a = _t.ContainsPoint(_neighbor.A);
@@ -74,7 +77,7 @@ public class NavMesh : Singleton<NavMesh>
                     _node.neighborsIndex.Add(j);
                     _node.neighborsEdge.Add(new Edge(_neighbor.A, _neighbor.B));
                 }
-                else if(_a && _c)
+                else if (_a && _c)
                 {
                     _node.neighborsIndex.Add(j);
                     _node.neighborsEdge.Add(new Edge(_neighbor.A, _neighbor.C));
@@ -86,14 +89,84 @@ public class NavMesh : Singleton<NavMesh>
                 }
             }
         }
-        navMeshData.triangles = _triangles;
-        navMeshData.nodes = _path;
-        EditorUtility.SetDirty(navMeshData);
+        return _nodes;
+    }
+    public List<Triangle> RemoveWrongTriangles(List<Triangle> _triangles)
+    {
+        int _count = _triangles.Count;
+        int i = 0;
+        while (i < _count)
+        {
+            Triangle _t = _triangles[i];
+            bool _hitAB = Physics.Linecast(_t.A, _t.B);
+            bool _hitBC = Physics.Linecast(_t.B, _t.C);
+            bool _hitCA = Physics.Linecast(_t.C, _t.A);
+            if (_hitAB || _hitBC || _hitCA)
+            {
+                _triangles.Remove(_t);
+                --_count;
+                continue;
+            }
+            i++;
+        }
+        return _triangles;
+    }
+    public void GeneratePoint()
+    {
+        vertices.Clear();
+        Vector3 _extends = navMeshSettings.extendsVolume / 2;
+        Vector3 _position = transform.position;
+        AddPoint(_position + _extends);
+        AddPoint(_position - _extends);
+        AddPoint(_position - new Vector3(_extends.x, 0, -_extends.z));
+        AddPoint(_position - new Vector3(-_extends.x, 0, _extends.z));
+        Collider[] _colliders = Physics.OverlapBox(_position, _extends, transform.rotation, navMeshSettings.volumeLayer);
+        int _count = _colliders.Length;
+        for (int i = 0; i < _count; i++)
+        {
+            Handles.color = Color.white;
+            Bounds _bounds = _colliders[i].bounds;
+
+            Handles.color = Color.red;
+            Vector3 _extendsWithoutY = new Vector3(_bounds.extents.x, 0, _bounds.extents.z);
+            Vector3 _extendsOpposite = new Vector3(_bounds.extents.x, 0, -_bounds.extents.z);
+
+            Vector3 _boundPExtends = _bounds.center + _extendsWithoutY;
+            Vector3 _boundMExtends = _bounds.center - _extendsWithoutY;
+            Vector3 _boundPExtendsOpposite = _bounds.center + _extendsOpposite;
+            Vector3 _boundMExtendsOpposite = _bounds.center - _extendsOpposite;
+
+            Vector3 _offset = new Vector3(1, 0, 1) * 0.2f;
+            Vector3 _offsetOpposite = new Vector3(1, 0, -1) * 0.2f;
+
+            Vector3[] _allPoint = new Vector3[]
+            { 
+                //_boundPExtends - _offset,
+                //_boundMExtends + _offset,
+                //_boundMExtendsOpposite + _offsetOpposite,
+                //_boundPExtendsOpposite - _offsetOpposite,
+                _boundMExtendsOpposite - _offsetOpposite,
+                _boundPExtendsOpposite + _offsetOpposite,
+                _boundMExtends - _offset,
+                _boundPExtends + _offset,
+            };
+            foreach (var _point in _allPoint)
+                AddPoint(_point);
+        }
+    }
+    public void AddPoint(Vector3 _point)
+    {
+        bool _hit = Physics.Raycast(_point + Vector3.up * 10000, Vector3.down, out RaycastHit _rayHit, Mathf.Infinity, navMeshSettings.pointLayer);
+        if (_hit)
+        {
+            Vector3 _position = new Vector3((float)Math.Round(_rayHit.point.x, 2), (float)Math.Round(_rayHit.point.y, 2), (float)Math.Round(_rayHit.point.z, 2));
+            vertices.Add(_position);
+        }
     }
     private void OnDrawGizmos()
     {
-        if (!navMeshVolumeDebug) return;
+        if (!navMeshDebug.displayNavMeshVolume) return;
         Gizmos.color = Color.green - new Color(0,0,0, 0.7f);
-        Gizmos.DrawCube(transform.position, extends);
+        Gizmos.DrawCube(transform.position, navMeshSettings.extendsVolume);
     }
 }
